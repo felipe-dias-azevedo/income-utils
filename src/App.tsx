@@ -110,7 +110,7 @@ export default function App() {
         transition: "background-color 0.3s ease"
       }}
     >
-      <Container size="3">
+      <Container size="4">
         <Box p="4">
           <Flex justify="between" align="center" mb="6">
             <Heading size="8">Comparador de Rendimentos</Heading>

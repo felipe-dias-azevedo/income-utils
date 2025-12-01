@@ -8,12 +8,14 @@ import {
   Text,
   Tabs,
   ContextMenu,
-  Dialog
+  Dialog,
+  Popover
 } from "@radix-ui/themes";
 import {
   TrashIcon,
   Pencil1Icon,
-  DragHandleDots2Icon
+  DragHandleDots2Icon,
+  InfoCircledIcon
 } from "@radix-ui/react-icons";
 import type { ComputedIncome, IncomeEntry } from "../types/income";
 import { getJornadaLabel } from "../utils/incomeCalculations";
@@ -39,7 +41,6 @@ interface ColumnConfig {
 const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
   hora: [
     { key: "drag_handle", label: "", isDragHandle: true },
-    { key: "salario_mensal", label: "Salário Mensal" },
     { key: "jornada", label: "Jornada" },
     { key: "hora", label: "Salário/Hora", bold: true },
     { key: "hora_anual", label: "Total/Ano/Hora" },
@@ -47,26 +48,25 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
   ],
   liquido: [
     { key: "drag_handle", label: "", isDragHandle: true },
-    { key: "salario_mensal", label: "Mensal Bruto" },
-    { key: "bonus_liquido", label: "PLR Líquido" },
-    { key: "outros", label: "Outros" },
     { key: "salario_liquido", label: "Salário Líquido", bold: true },
+    { key: "outros", label: "Outros" },
     { key: "total_mes_liquido", label: "Total/Mês Líquido" },
+    { key: "bonus_liquido", label: "PLR Líquido" },
     { key: "total_ano_liquido", label: "Total/Ano Líquido" }
   ],
   mensal: [
     { key: "drag_handle", label: "", isDragHandle: true },
-    { key: "salario_mensal", label: "Salário Mensal" },
-    { key: "bonus", label: "PLR Anual" },
+    { key: "salario_mensal", label: "Salário/Mês" },
+    { key: "bonus", label: "PLR" },
     { key: "outros", label: "Outros" },
     { key: "total_mes", label: "Total/Mês", bold: true },
     { key: "total_mes_outros", label: "Total/Mês + Outros" }
   ],
   anual: [
     { key: "drag_handle", label: "", isDragHandle: true },
-    { key: "salario_anual", label: "Salário Anual" },
-    { key: "bonus_anual", label: "PLR Anual" },
-    { key: "outros_anual", label: "Outros Anual" },
+    { key: "salario_anual", label: "Salário/Ano" },
+    { key: "bonus_anual", label: "PLR" },
+    { key: "outros_anual", label: "Outros/Ano" },
     { key: "total_ano", label: "Total/Ano", bold: true },
     { key: "total_ano_outros", label: "Total/Ano + Outros" }
   ]
@@ -82,6 +82,7 @@ export function IncomeTable({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
+  const [popoverOpenId, setPopoverOpenId] = useState<number | null>(null);
   const editingIncome = editingId
     ? incomes.find((i) => i.id === editingId)
     : null;
@@ -217,14 +218,22 @@ export function IncomeTable({
             <Table.Root>
               <Table.Header>
                 <Table.Row>
-                  {columns.map(({ key, label, isDragHandle }) => (
-                    <Table.ColumnHeaderCell
-                      key={key}
-                      style={{ width: isDragHandle ? "40px" : "140px" }}
-                    >
-                      {label}
-                    </Table.ColumnHeaderCell>
-                  ))}
+                  <Table.ColumnHeaderCell
+                    style={{ width: "40px" }}
+                  ></Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell style={{ width: "180px" }}>
+                    Nome
+                  </Table.ColumnHeaderCell>
+                  {columns.map(({ key, label, isDragHandle }) =>
+                    isDragHandle ? null : (
+                      <Table.ColumnHeaderCell
+                        key={key}
+                        style={{ width: "240px" }}
+                      >
+                        {label}
+                      </Table.ColumnHeaderCell>
+                    )
+                  )}
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -248,11 +257,8 @@ export function IncomeTable({
                       >
                         <Table.Cell
                           style={{
-                            width: "50px",
-                            padding: "8px 4px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
+                            width: "40px",
+                            padding: "8px 4px"
                           }}
                         >
                           <div
@@ -262,9 +268,6 @@ export function IncomeTable({
                               cursor:
                                 draggedId === income.id ? "grabbing" : "grab",
                               padding: "4px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
                               borderRadius: "4px",
                               transition: "background-color 0.2s ease"
                             }}
@@ -272,19 +275,123 @@ export function IncomeTable({
                             <DragHandleDots2Icon width="18" height="18" />
                           </div>
                         </Table.Cell>
-                        {columns.map(
-                          ({ key, bold, isDragHandle }) =>
-                            isDragHandle || (
-                              <Table.Cell
-                                key={key}
-                                style={{
-                                  width: "40px",
-                                  fontWeight: bold === true ? "bold" : "normal"
-                                }}
-                              >
-                                {getCellValue(income, key)}
-                              </Table.Cell>
-                            )
+
+                        <Table.Cell
+                          style={{
+                            width: "180px",
+                            padding: "8px 12px"
+                          }}
+                        >
+                          <Flex
+                            align="center"
+                            justify="between"
+                            gap="2"
+                            style={{
+                              height: "100%",
+                              width: "100%",
+                              minWidth: 0
+                            }}
+                          >
+                            <Text
+                              size="2"
+                              weight="bold"
+                              style={{
+                                maxWidth: "180px",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap"
+                              }}
+                            >
+                              {income.name}
+                            </Text>
+                            <Popover.Root
+                              open={popoverOpenId === income.id}
+                              onOpenChange={(open) =>
+                                setPopoverOpenId(open ? income.id : null)
+                              }
+                            >
+                              <Popover.Trigger>
+                                <InfoCircledIcon
+                                  width="16"
+                                  height="16"
+                                  style={{ cursor: "pointer", flexShrink: 0 }}
+                                />
+                              </Popover.Trigger>
+                              <Popover.Content>
+                                <Box style={{ maxWidth: "250px" }}>
+                                  <Flex direction="column" gap="2">
+                                    <Box>
+                                      <Text size="1" weight="bold">
+                                        Nome:{" "}
+                                      </Text>
+                                      <Text size="1">{income.name}</Text>
+                                    </Box>
+                                    {income.description && (
+                                      <Box>
+                                        <Text size="1" weight="bold">
+                                          Descrição:{" "}
+                                        </Text>
+                                        <Text size="1">
+                                          {income.description}
+                                        </Text>
+                                      </Box>
+                                    )}
+                                    <Box>
+                                      <Text size="1" weight="bold">
+                                        Salário Mensal:{" "}
+                                      </Text>
+                                      <Text size="1">
+                                        R${" "}
+                                        {formatCurrencySimple(
+                                          income.salarioMensal
+                                        )}
+                                      </Text>
+                                    </Box>
+                                    <Box>
+                                      <Text size="1" weight="bold">
+                                        Multiplicador PLR:{" "}
+                                      </Text>
+                                      <Text size="1">
+                                        {income.bonusMultiplier
+                                          .toFixed(2)
+                                          .replace(".", ",")}
+                                      </Text>
+                                    </Box>
+                                    <Box>
+                                      <Text size="1" weight="bold">
+                                        Outros:{" "}
+                                      </Text>
+                                      <Text size="1">
+                                        R$ {formatCurrencySimple(income.outros)}
+                                      </Text>
+                                    </Box>
+                                    <Box>
+                                      <Text size="1" weight="bold">
+                                        Jornada:{" "}
+                                      </Text>
+                                      <Text size="1">
+                                        {getJornadaLabel(income.jornada)}
+                                      </Text>
+                                    </Box>
+                                  </Flex>
+                                </Box>
+                              </Popover.Content>
+                            </Popover.Root>
+                          </Flex>
+                        </Table.Cell>
+
+                        {columns.map(({ key, bold, isDragHandle }) =>
+                          isDragHandle ? null : (
+                            <Table.Cell
+                              key={key}
+                              style={{
+                                width: "240px",
+                                fontWeight: bold === true ? "bold" : "normal"
+                              }}
+                            >
+                              {getCellValue(income, key)}
+                            </Table.Cell>
+                          )
                         )}
                       </Table.Row>
                     </ContextMenu.Trigger>
@@ -319,11 +426,14 @@ export function IncomeTable({
             <Box p="4">
               <IncomeForm
                 initialData={{
+                  name: editingIncome.name,
+                  description: editingIncome.description,
                   salarioMensal: editingIncome.salarioMensal,
                   bonusMultiplier: editingIncome.bonusMultiplier,
                   outros: editingIncome.outros,
                   jornada: editingIncome.jornada,
-                  color: editingIncome.color
+                  color: editingIncome.color,
+                  index: editingIncome.index
                 }}
                 onSubmit={(entry) => {
                   onUpdate(editingId, entry);

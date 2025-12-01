@@ -28,11 +28,14 @@ interface IncomeFormProps {
   onSubmit: (entry: IncomeEntry) => void;
   isLoading?: boolean;
   initialData?: {
+    name: string;
+    description?: string;
     salarioMensal: number;
     bonusMultiplier: number;
     outros: number;
     jornada: string;
     color?: string;
+    index: number;
   };
   isEditing?: boolean;
 }
@@ -43,6 +46,10 @@ export function IncomeForm({
   initialData,
   isEditing = false
 }: IncomeFormProps) {
+  const [name, setName] = useState(initialData?.name || "");
+  const [description, setDescription] = useState(
+    initialData?.description || ""
+  );
   const [salarioMensal, setSalarioMensal] = useState(
     initialData ? formatCurrencySimple(initialData.salarioMensal) : ""
   );
@@ -60,23 +67,33 @@ export function IncomeForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!name.trim()) {
+      alert("Nome é obrigatório");
+      return;
+    }
+
     if (!salarioMensal) {
       alert("Salário mensal é obrigatório");
       return;
     }
 
     const entry: IncomeEntry = {
+      name: name.trim(),
+      description: description.trim() || undefined,
       salarioMensal: parseCurrencyString(salarioMensal),
       bonusMultiplier: parseFloat(bonusMultiplier.replace(",", ".")) || 0,
       outros: parseCurrencyString(outros),
       jornada,
       color,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      index: initialData?.index || 0
     };
 
     onSubmit(entry);
 
     // Reset form
+    setName("");
+    setDescription("");
     setSalarioMensal("");
     setBonusMultiplier("0");
     setOutros("");
@@ -87,6 +104,34 @@ export function IncomeForm({
   return (
     <form onSubmit={handleSubmit}>
       <Flex direction="column" gap="3">
+        <Box>
+          <label>
+            <div style={{ marginBottom: "8px", fontSize: "14px" }}>Nome *</div>
+            <TextField.Root
+              type="text"
+              placeholder="Ex: Empresa A (max 20 caracteres)"
+              value={name}
+              maxLength={20}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </label>
+        </Box>
+
+        <Box>
+          <label>
+            <div style={{ marginBottom: "8px", fontSize: "14px" }}>
+              Descrição (opcional)
+            </div>
+            <TextField.Root
+              type="text"
+              placeholder="Ex: Cargo de desenvolvedor (max 30 caracteres)"
+              value={description}
+              maxLength={30}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </label>
+        </Box>
+
         <Box>
           <label>
             <div style={{ marginBottom: "8px", fontSize: "14px" }}>

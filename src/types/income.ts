@@ -7,6 +7,8 @@ export type JornadaType = (typeof JornadaType)[keyof typeof JornadaType];
 
 export interface IncomeEntry {
   id?: number;
+  name: string; // Name for the income entry (max 12 characters)
+  description?: string; // Optional description (max 30 characters)
   salarioMensal: number;
   bonusMultiplier: number; // Stored as multiplier (e.g., 1.5 for 150% of salary)
   outros: number;
