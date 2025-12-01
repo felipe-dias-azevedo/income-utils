@@ -37,8 +37,11 @@ export default function App() {
     setIsDark(!isDark);
   };
 
-  // Load all incomes from database
-  const incomeEntries = useLiveQuery(() => db.incomes.toArray(), []);
+  // Load all incomes from database, sorted by index
+  const incomeEntries = useLiveQuery(
+    () => db.incomes.orderBy("index").toArray(),
+    []
+  );
 
   const computedIncomes: ComputedIncome[] = (incomeEntries || []).map((entry) =>
     computeIncome(entry)
@@ -47,7 +50,10 @@ export default function App() {
   const handleAddIncome = async (entry: IncomeEntry) => {
     setIsLoading(true);
     try {
-      await db.incomes.add(entry);
+      // Get the next index
+      const maxIndexItem = await db.incomes.orderBy("index").last();
+      const nextIndex = maxIndexItem ? maxIndexItem.index + 1 : 0;
+      await db.incomes.add({ ...entry, index: nextIndex });
     } catch (error) {
       console.error("Error adding income:", error);
       alert("Erro ao adicionar rendimento");
@@ -79,6 +85,22 @@ export default function App() {
     }
   };
 
+  const handleReorderIncomes = async (reorderedIncomes: ComputedIncome[]) => {
+    try {
+      // Update index for all items based on their new positions
+      await Promise.all(
+        reorderedIncomes.map((income, newIndex) =>
+          db.incomes.update(income.id, {
+            index: newIndex
+          } as Partial<IncomeEntry>)
+        )
+      );
+    } catch (error) {
+      console.error("Error reordering incomes:", error);
+      alert("Erro ao reordenar rendimentos");
+    }
+  };
+
   return (
     <Box
       style={{
@@ -100,6 +122,7 @@ export default function App() {
               incomes={computedIncomes}
               onDelete={handleDeleteIncome}
               onUpdate={handleUpdateIncome}
+              onReorder={handleReorderIncomes}
             />
             <Card>
               <Box p="4">

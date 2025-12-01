@@ -9,6 +9,9 @@ export class IncomeDatabase extends Dexie {
     this.version(1).stores({
       incomes: "++id, createdAt"
     });
+    this.version(2).stores({
+      incomes: "++id, createdAt, index"
+    });
   }
 }
 

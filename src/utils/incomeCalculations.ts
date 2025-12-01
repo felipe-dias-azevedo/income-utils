@@ -63,12 +63,15 @@ export function computeIncome(entry: IncomeEntry): ComputedIncome {
   const jornadaHours = entry.jornada === JornadaType.FORTY_HOURS ? 40 : 44;
   const hoursPerDay = jornadaHours / 5;
   const salarioHora = salarioAnual / 52 / 5 / hoursPerDay;
+  const salarioHoraAnual = totalPerYear / 52 / 5 / hoursPerDay;
+  const salarioHoraAnualOutros = totalPerYearPlusOthers / 52 / 5 / hoursPerDay;
 
   // Calculate net salary using proper Brazilian tax system
   const inss = calculateINSS(salarioBruto);
   const baseIR = salarioBruto - inss;
   const ir = calculateIR(baseIR);
   const salarioLiquido = Math.round((salarioBruto - inss - ir) * 100) / 100;
+  const bonusLiquido = bonusAmountAnual - calculateBonusIR(bonusAmountAnual);
 
   return {
     ...entry,
@@ -82,11 +85,13 @@ export function computeIncome(entry: IncomeEntry): ComputedIncome {
     totalPerYearPlusOthers,
     salarioLiquido,
     totalMesLiquido: Math.round((salarioLiquido + outros) * 100) / 100,
-    bonusLiquido:
-      Math.round(
-        (bonusAmountAnual - calculateBonusIR(bonusAmountAnual)) * 100
-      ) / 100,
+    totalAnoLiquido:
+      Math.round((salarioLiquido * 12 + outros * 12 + bonusLiquido) * 100) /
+      100,
+    bonusLiquido: Math.round(bonusLiquido * 100) / 100,
     salarioHora,
+    salarioHoraAnual,
+    salarioHoraAnualOutros,
     outrosAnual: outros * 12
   };
 }

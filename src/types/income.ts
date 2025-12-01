@@ -13,6 +13,7 @@ export interface IncomeEntry {
   jornada: JornadaType;
   color?: string; // Radix UI color (e.g., "red", "blue", "transparent")
   createdAt?: number;
+  index: number; // Position in the table for drag-and-drop reordering
 }
 
 export interface ComputedIncome extends IncomeEntry {
@@ -28,5 +29,8 @@ export interface ComputedIncome extends IncomeEntry {
   totalPerYearPlusOthers: number;
   salarioLiquido: number;
   totalMesLiquido: number;
+  totalAnoLiquido: number;
   salarioHora: number;
+  salarioHoraAnual: number;
+  salarioHoraAnualOutros: number;
 }
