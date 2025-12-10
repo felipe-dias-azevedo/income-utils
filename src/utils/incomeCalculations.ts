@@ -60,7 +60,12 @@ export function computeIncome(entry: IncomeEntry): ComputedIncome {
   const totalPerYearPlusOthers = totalPerYear + outros * 12;
 
   // Calculate hourly salary: annual salary / 52 weeks / 5 days / (hours per day)
-  const jornadaHours = entry.jornada === JornadaType.FORTY_HOURS ? 40 : 44;
+  const jornadaHours =
+    entry.jornada === JornadaType.FORTY_HOURS
+      ? 40
+      : entry.jornada === JornadaType.FORTY_FOUR_HOURS
+      ? 44
+      : 36;
   const hoursPerDay = jornadaHours / 5;
   const salarioHora = salarioAnual / 52 / 5 / hoursPerDay;
   const salarioHoraAnual = totalPerYear / 52 / 5 / hoursPerDay;

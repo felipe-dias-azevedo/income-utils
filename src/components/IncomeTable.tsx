@@ -9,13 +9,17 @@ import {
   Tabs,
   ContextMenu,
   Dialog,
-  Popover
+  Popover,
+  Button
 } from "@radix-ui/themes";
 import {
   TrashIcon,
   Pencil1Icon,
   DragHandleDots2Icon,
-  InfoCircledIcon
+  InfoCircledIcon,
+  EyeOpenIcon,
+  EyeClosedIcon,
+  SliderIcon
 } from "@radix-ui/react-icons";
 import type { ComputedIncome, IncomeEntry } from "../types/income";
 import { getJornadaLabel } from "../utils/incomeCalculations";
@@ -67,8 +71,8 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
     { key: "salario_anual", label: "Salário/Ano" },
     { key: "bonus_anual", label: "PLR" },
     { key: "outros_anual", label: "Outros/Ano" },
-    { key: "total_ano", label: "Total/Ano", bold: true },
-    { key: "total_ano_outros", label: "Total/Ano + Outros" }
+    { key: "total_ano", label: "Total/Ano" },
+    { key: "total_ano_outros", label: "Total/Ano + Outros", bold: true }
   ]
 };
 
@@ -83,6 +87,8 @@ export function IncomeTable({
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
   const [popoverOpenId, setPopoverOpenId] = useState<number | null>(null);
+  const [isComparing, setIsComparing] = useState(false);
+  const [compareBaseId, setCompareBaseId] = useState<number | null>(null);
   const editingIncome = editingId
     ? incomes.find((i) => i.id === editingId)
     : null;
@@ -191,22 +197,67 @@ export function IncomeTable({
 
   const columns = VIEW_CONFIGS[viewType];
 
+  const getBoldColumnKey = (): string => {
+    const boldColumn = VIEW_CONFIGS[viewType].find((col) => col.bold);
+    return boldColumn?.key || "";
+  };
+
+  const getCompareBase = (): ComputedIncome | null => {
+    if (!isComparing) return null;
+    if (compareBaseId !== null) {
+      return incomes.find((i) => i.id === compareBaseId) || null;
+    }
+    return incomes[0] || null;
+  };
+
+  const calculatePercentageDifference = (
+    currentValue: number,
+    baseValue: number
+  ): string => {
+    if (baseValue === 0) return "N/A";
+    const percentage = ((currentValue - baseValue) / baseValue) * 100;
+    const sign = percentage > 0 ? "+" : "";
+    return `${sign}${percentage.toFixed(1)}%`;
+  };
+
+  const getPercentageColor = (percentage: string): "gray" | "green" | "red" => {
+    if (percentage === "N/A") return "gray";
+    if (percentage.includes("+")) return "green";
+    return "red";
+  };
+
   return (
     <Card>
       <Box p="4">
         <Flex justify="between" align="center" mb="4">
           <Heading size="4">Comparativo de Rendimentos</Heading>
-          <Tabs.Root
-            value={viewType}
-            onValueChange={(value) => setViewType(value as ViewType)}
-          >
-            <Tabs.List>
-              <Tabs.Trigger value="liquido">Líquido</Tabs.Trigger>
-              <Tabs.Trigger value="hora">Hora</Tabs.Trigger>
-              <Tabs.Trigger value="mensal">Mensal</Tabs.Trigger>
-              <Tabs.Trigger value="anual">Anual</Tabs.Trigger>
-            </Tabs.List>
-          </Tabs.Root>
+          <Flex align="center" gap="4">
+            <Button
+              variant="ghost"
+              size="2"
+              onClick={() => {
+                setIsComparing(!isComparing);
+                if (!isComparing) {
+                  setCompareBaseId(null);
+                }
+              }}
+              title={isComparing ? "Desativar comparação" : "Ativar comparação"}
+            >
+              {isComparing ? <EyeOpenIcon /> : <EyeClosedIcon />}
+              <Text size="2">{isComparing ? "Comparando" : "Comparar"}</Text>
+            </Button>
+            <Tabs.Root
+              value={viewType}
+              onValueChange={(value) => setViewType(value as ViewType)}
+            >
+              <Tabs.List>
+                <Tabs.Trigger value="liquido">Líquido</Tabs.Trigger>
+                <Tabs.Trigger value="hora">Hora</Tabs.Trigger>
+                <Tabs.Trigger value="mensal">Mensal</Tabs.Trigger>
+                <Tabs.Trigger value="anual">Anual</Tabs.Trigger>
+              </Tabs.List>
+            </Tabs.Root>
+          </Flex>
         </Flex>
 
         {incomes.length === 0 ? (
@@ -233,6 +284,11 @@ export function IncomeTable({
                         {label}
                       </Table.ColumnHeaderCell>
                     )
+                  )}
+                  {isComparing && (
+                    <Table.ColumnHeaderCell style={{ width: "120px" }}>
+                      Comparação
+                    </Table.ColumnHeaderCell>
                   )}
                 </Table.Row>
               </Table.Header>
@@ -355,6 +411,7 @@ export function IncomeTable({
                                         {income.bonusMultiplier
                                           .toFixed(2)
                                           .replace(".", ",")}
+                                        x
                                       </Text>
                                     </Box>
                                     <Box>
@@ -393,12 +450,62 @@ export function IncomeTable({
                             </Table.Cell>
                           )
                         )}
+                        {isComparing && (
+                          <Table.Cell style={{ width: "120px" }}>
+                            {(() => {
+                              const boldKey = getBoldColumnKey();
+                              const compareBase = getCompareBase();
+                              if (
+                                !compareBase ||
+                                !boldKey ||
+                                income.id === compareBase.id
+                              ) {
+                                return <Text size="2">—</Text>;
+                              }
+                              const currentValue = getCellValue(
+                                income,
+                                boldKey
+                              );
+                              const baseValue = getCellValue(
+                                compareBase,
+                                boldKey
+                              );
+                              const currentNumeric = parseFloat(
+                                currentValue.replace("R$ ", "").replace(".", "")
+                              );
+                              const baseNumeric = parseFloat(
+                                baseValue.replace("R$ ", "").replace(".", "")
+                              );
+                              const percentage = calculatePercentageDifference(
+                                currentNumeric,
+                                baseNumeric
+                              );
+                              return (
+                                <Text
+                                  size="2"
+                                  weight="bold"
+                                  color={getPercentageColor(percentage)}
+                                >
+                                  {percentage}
+                                </Text>
+                              );
+                            })()}
+                          </Table.Cell>
+                        )}
                       </Table.Row>
                     </ContextMenu.Trigger>
                     <ContextMenu.Content>
                       <ContextMenu.Item onClick={() => setEditingId(income.id)}>
                         <Pencil1Icon /> Editar
                       </ContextMenu.Item>
+                      {isComparing && (
+                        <ContextMenu.Item
+                          onClick={() => setCompareBaseId(income.id)}
+                        >
+                          <SliderIcon />
+                          Comparar com este
+                        </ContextMenu.Item>
+                      )}
                       <ContextMenu.Item
                         color="red"
                         onClick={() => onDelete(income.id)}

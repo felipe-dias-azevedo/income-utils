@@ -187,6 +187,9 @@ export function IncomeForm({
             >
               <Select.Trigger />
               <Select.Content>
+                <Select.Item value={JornadaType.THIRTY_SIX_HOURS}>
+                  36 horas
+                </Select.Item>
                 <Select.Item value={JornadaType.FORTY_HOURS}>
                   40 horas
                 </Select.Item>

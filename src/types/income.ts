@@ -1,4 +1,5 @@
 export const JornadaType = {
+  THIRTY_SIX_HOURS: "36h",
   FORTY_HOURS: "40h",
   FORTY_FOUR_HOURS: "44h"
 } as const;
