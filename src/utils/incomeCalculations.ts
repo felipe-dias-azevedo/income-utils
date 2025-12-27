@@ -100,7 +100,3 @@ export function computeIncome(entry: IncomeEntry): ComputedIncome {
     outrosAnual: outros * 12
   };
 }
-
-export function getJornadaLabel(jornada: JornadaType): string {
-  return jornada === JornadaType.FORTY_HOURS ? "40h" : "44h";
-}

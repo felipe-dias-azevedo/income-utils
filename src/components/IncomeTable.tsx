@@ -22,7 +22,6 @@ import {
   SliderIcon
 } from "@radix-ui/react-icons";
 import type { ComputedIncome, IncomeEntry } from "../types/income";
-import { getJornadaLabel } from "../utils/incomeCalculations";
 import { formatCurrencySimple } from "../utils/formatting";
 import { IncomeForm } from "./IncomeForm";
 
@@ -46,25 +45,25 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
   hora: [
     { key: "drag_handle", label: "", isDragHandle: true },
     { key: "jornada", label: "Jornada" },
-    { key: "hora", label: "Salário/Hora", bold: true },
-    { key: "hora_anual", label: "Total/Ano/Hora" },
-    { key: "hora_anual_outros", label: "Total/Ano + Outros/Hora" }
+    { key: "hora", label: "Salário/Hora" },
+    { key: "hora_anual", label: "Total + PLR" },
+    { key: "hora_anual_outros", label: "Total + PLR + Outros", bold: true }
   ],
   liquido: [
     { key: "drag_handle", label: "", isDragHandle: true },
-    { key: "salario_liquido", label: "Salário Líquido", bold: true },
+    { key: "salario_liquido", label: "Salário Líquido" },
     { key: "outros", label: "Outros" },
     { key: "total_mes_liquido", label: "Total/Mês Líquido" },
     { key: "bonus_liquido", label: "PLR Líquido" },
-    { key: "total_ano_liquido", label: "Total/Ano Líquido" }
+    { key: "total_ano_liquido", label: "Total/Ano Líquido", bold: true }
   ],
   mensal: [
     { key: "drag_handle", label: "", isDragHandle: true },
     { key: "salario_mensal", label: "Salário/Mês" },
     { key: "bonus", label: "PLR" },
     { key: "outros", label: "Outros" },
-    { key: "total_mes", label: "Total/Mês", bold: true },
-    { key: "total_mes_outros", label: "Total/Mês + Outros" }
+    { key: "total_mes", label: "Total/Mês" },
+    { key: "total_mes_outros", label: "Total/Mês + Outros", bold: true }
   ],
   anual: [
     { key: "drag_handle", label: "", isDragHandle: true },
@@ -98,7 +97,7 @@ export function IncomeTable({
 
     switch (columnKey) {
       case "jornada":
-        return getJornadaLabel(income.jornada);
+        return income.jornada;
       case "hora":
         return formatValue(income.salarioHora);
       case "hora_anual":
@@ -426,9 +425,7 @@ export function IncomeTable({
                                       <Text size="1" weight="bold">
                                         Jornada:{" "}
                                       </Text>
-                                      <Text size="1">
-                                        {getJornadaLabel(income.jornada)}
-                                      </Text>
+                                      <Text size="1">{income.jornada}</Text>
                                     </Box>
                                   </Flex>
                                 </Box>
@@ -532,16 +529,7 @@ export function IncomeTable({
             <Dialog.Title>Editar Rendimento</Dialog.Title>
             <Box p="4">
               <IncomeForm
-                initialData={{
-                  name: editingIncome.name,
-                  description: editingIncome.description,
-                  salarioMensal: editingIncome.salarioMensal,
-                  bonusMultiplier: editingIncome.bonusMultiplier,
-                  outros: editingIncome.outros,
-                  jornada: editingIncome.jornada,
-                  color: editingIncome.color,
-                  index: editingIncome.index
-                }}
+                initialData={{ ...editingIncome }}
                 onSubmit={(entry) => {
                   onUpdate(editingId, entry);
                   setEditingId(null);
