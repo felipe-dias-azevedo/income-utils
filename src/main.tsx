@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
+import { ThemeProvider } from "next-themes";
 
 // Radix Themes
 import "@radix-ui/themes/styles.css";
@@ -8,8 +9,10 @@ import { Theme } from "@radix-ui/themes";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <Theme>
-      <App />
-    </Theme>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <Theme panelBackground="translucent">
+        <App />
+      </Theme>
+    </ThemeProvider>
   </React.StrictMode>
 );

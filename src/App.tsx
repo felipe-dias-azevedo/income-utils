@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Box, Container, Flex, Heading, Card } from "@radix-ui/themes";
 import { useLiveQuery } from "dexie-react-hooks";
 import type { IncomeEntry, ComputedIncome } from "./types/income";
@@ -7,34 +7,16 @@ import { computeIncome } from "./utils/incomeCalculations";
 import { IncomeForm } from "./components/IncomeForm";
 import { IncomeTable } from "./components/IncomeTable";
 import { ThemeToggle } from "./components/ThemeToggle";
+import { useTheme } from "next-themes";
 
 export default function App() {
-  const [isDark, setIsDark] = useState(false);
+  const { theme, setTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Load theme preference from localStorage
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    const shouldBeDark = savedTheme ? savedTheme === "dark" : prefersDark;
-    setIsDark(shouldBeDark);
-  }, []);
-
-  // Apply theme to document
-  useEffect(() => {
-    const htmlElement = document.documentElement;
-    if (isDark) {
-      htmlElement.style.colorScheme = "dark";
-    } else {
-      htmlElement.style.colorScheme = "light";
-    }
-    localStorage.setItem("theme", isDark ? "dark" : "light");
-  }, [isDark]);
+  const isDark = theme === "dark";
 
   const toggleTheme = () => {
-    setIsDark(!isDark);
+    setTheme(isDark ? "light" : "dark");
   };
 
   // Load all incomes from database, sorted by index
