@@ -52,7 +52,7 @@ export function Header({ isDark, children }: HeaderProps) {
               Utilitários de Rendimentos
             </Heading>
 
-            <Flex gap="4" align="center">
+            <Flex gap="3" align="center">
               {children}
             </Flex>
           </Flex>

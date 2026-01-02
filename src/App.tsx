@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Box, Container, Flex, Heading, Card, Button } from "@radix-ui/themes";
+import {
+  Box,
+  Container,
+  Flex,
+  Heading,
+  Card,
+  Button,
+  Text,
+} from "@radix-ui/themes";
 import { useLiveQuery } from "dexie-react-hooks";
 import type { IncomeEntry, ComputedIncome } from "./types/income";
 import { db } from "./db/database";
@@ -10,11 +18,17 @@ import { Header } from "./components/Header";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { useTheme } from "next-themes";
 import { exportToCSV } from "./utils/exportCSV";
-import { DownloadIcon } from "@radix-ui/react-icons";
+import {
+  DownloadIcon,
+  EyeClosedIcon,
+  EyeOpenIcon,
+} from "@radix-ui/react-icons";
 
 export default function App() {
   const { theme, setTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
+  const [isComparing, setIsComparing] = useState(false);
+  const [compareBaseId, setCompareBaseId] = useState<number | null>(null);
 
   const isDark = theme === "dark";
 
@@ -97,6 +111,22 @@ export default function App() {
     >
       <Header isDark={isDark}>
         <Button
+          variant="soft"
+          style={{
+            borderRadius: "20px",
+          }}
+          onClick={() => {
+            setIsComparing(!isComparing);
+            if (!isComparing) {
+              setCompareBaseId(null);
+            }
+          }}
+          title={isComparing ? "Desativar comparação" : "Ativar comparação"}
+        >
+          {isComparing ? <EyeOpenIcon /> : <EyeClosedIcon />}
+          <Text size="2">{isComparing ? "Comparando" : "Comparar"}</Text>
+        </Button>
+        <Button
           onClick={() => exportToCSV(computedIncomes)}
           disabled={computedIncomes.length === 0}
           variant="soft"
@@ -119,6 +149,9 @@ export default function App() {
                 onDelete={handleDeleteIncome}
                 onUpdate={handleUpdateIncome}
                 onReorder={handleReorderIncomes}
+                isComparing={isComparing}
+                compareBaseId={compareBaseId}
+                onCompareBaseIdChange={setCompareBaseId}
               />
             )}
 

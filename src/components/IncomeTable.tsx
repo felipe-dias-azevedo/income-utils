@@ -10,15 +10,12 @@ import {
   ContextMenu,
   Dialog,
   Popover,
-  Button,
 } from "@radix-ui/themes";
 import {
   TrashIcon,
   Pencil1Icon,
   DragHandleDots2Icon,
   InfoCircledIcon,
-  EyeOpenIcon,
-  EyeClosedIcon,
   SliderIcon,
 } from "@radix-ui/react-icons";
 import type { ComputedIncome, IncomeEntry } from "../types/income";
@@ -27,6 +24,9 @@ import { IncomeForm } from "./IncomeForm";
 
 interface IncomeTableProps {
   incomes: ComputedIncome[];
+  isComparing: boolean;
+  compareBaseId: number | null;
+  onCompareBaseIdChange: (id: number | null) => void;
   onDelete: (id: number) => void;
   onUpdate: (id: number, entry: IncomeEntry) => void;
   onReorder?: (incomes: ComputedIncome[]) => void;
@@ -77,6 +77,9 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
 
 export function IncomeTable({
   incomes,
+  isComparing,
+  compareBaseId,
+  onCompareBaseIdChange,
   onDelete,
   onUpdate,
   onReorder,
@@ -86,8 +89,6 @@ export function IncomeTable({
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
   const [popoverOpenId, setPopoverOpenId] = useState<number | null>(null);
-  const [isComparing, setIsComparing] = useState(false);
-  const [compareBaseId, setCompareBaseId] = useState<number | null>(null);
   const editingIncome = editingId
     ? incomes.find((i) => i.id === editingId)
     : null;
@@ -231,20 +232,6 @@ export function IncomeTable({
         <Flex justify="between" align="center" mb="4">
           <Heading size="4">Rendimentos</Heading>
           <Flex align="center" gap="4">
-            <Button
-              variant="ghost"
-              size="2"
-              onClick={() => {
-                setIsComparing(!isComparing);
-                if (!isComparing) {
-                  setCompareBaseId(null);
-                }
-              }}
-              title={isComparing ? "Desativar comparação" : "Ativar comparação"}
-            >
-              {isComparing ? <EyeOpenIcon /> : <EyeClosedIcon />}
-              <Text size="2">{isComparing ? "Comparando" : "Comparar"}</Text>
-            </Button>
             <Tabs.Root
               value={viewType}
               onValueChange={(value) => setViewType(value as ViewType)}
@@ -497,7 +484,7 @@ export function IncomeTable({
                       </ContextMenu.Item>
                       {isComparing && (
                         <ContextMenu.Item
-                          onClick={() => setCompareBaseId(income.id)}
+                          onClick={() => onCompareBaseIdChange(income.id)}
                         >
                           <SliderIcon />
                           Comparar com este
