@@ -11,7 +11,7 @@ export function ThemeToggle({ isDark, onToggle }: ThemeToggleProps) {
     <IconButton
       onClick={onToggle}
       variant="ghost"
-      size="2"
+      size="3"
       title={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
     >
       {isDark ? <SunIcon /> : <MoonIcon />}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Container, Flex, Heading, Card } from "@radix-ui/themes";
+import { Box, Container, Flex, Heading, Card, Button } from "@radix-ui/themes";
 import { useLiveQuery } from "dexie-react-hooks";
 import type { IncomeEntry, ComputedIncome } from "./types/income";
 import { db } from "./db/database";
@@ -8,6 +8,8 @@ import { IncomeForm } from "./components/IncomeForm";
 import { IncomeTable } from "./components/IncomeTable";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { useTheme } from "next-themes";
+import { exportToCSV } from "./utils/exportCSV";
+import { DownloadIcon } from "@radix-ui/react-icons";
 
 export default function App() {
   const { theme, setTheme } = useTheme();
@@ -96,7 +98,16 @@ export default function App() {
         <Box p="4">
           <Flex justify="between" align="center" mb="6">
             <Heading size="8">Comparador de Rendimentos</Heading>
-            <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+            <Flex gap="3" align="center">
+              <Button
+                onClick={() => exportToCSV(computedIncomes)}
+                disabled={computedIncomes.length === 0}
+                variant="soft"
+              >
+                <DownloadIcon /> Exportar
+              </Button>
+              <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+            </Flex>
           </Flex>
 
           <Flex direction="column" gap="6">
