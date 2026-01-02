@@ -15,6 +15,7 @@ import { computeIncome } from "./utils/incomeCalculations";
 import { IncomeForm } from "./components/IncomeForm";
 import { IncomeTable } from "./components/IncomeTable";
 import { Header } from "./components/Header";
+import { useAlertDialog } from "./components/AlertDialogContext";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { useTheme } from "next-themes";
 import { exportToCSV } from "./utils/exportCSV";
@@ -29,6 +30,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isComparing, setIsComparing] = useState(false);
   const [compareBaseId, setCompareBaseId] = useState<number | null>(null);
+  const { alert, confirm } = useAlertDialog();
 
   const isDark = theme === "dark";
 
@@ -62,7 +64,7 @@ export default function App() {
   };
 
   const handleDeleteIncome = async (id: number) => {
-    if (confirm("Tem certeza que deseja remover este rendimento?")) {
+    if (await confirm("Tem certeza que deseja remover este rendimento?")) {
       try {
         await db.incomes.delete(id);
       } catch (error) {
