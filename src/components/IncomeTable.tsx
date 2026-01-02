@@ -10,7 +10,7 @@ import {
   ContextMenu,
   Dialog,
   Popover,
-  Button
+  Button,
 } from "@radix-ui/themes";
 import {
   TrashIcon,
@@ -19,7 +19,7 @@ import {
   InfoCircledIcon,
   EyeOpenIcon,
   EyeClosedIcon,
-  SliderIcon
+  SliderIcon,
 } from "@radix-ui/react-icons";
 import type { ComputedIncome, IncomeEntry } from "../types/income";
 import { formatCurrencySimple } from "../utils/formatting";
@@ -47,7 +47,7 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
     { key: "jornada", label: "Jornada" },
     { key: "hora", label: "Salário/Hora" },
     { key: "hora_anual", label: "Total + PLR" },
-    { key: "hora_anual_outros", label: "Total + PLR + Outros", bold: true }
+    { key: "hora_anual_outros", label: "Total + PLR + Outros", bold: true },
   ],
   liquido: [
     { key: "drag_handle", label: "", isDragHandle: true },
@@ -55,7 +55,7 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
     { key: "outros", label: "Outros" },
     { key: "total_mes_liquido", label: "Total/Mês Líquido" },
     { key: "bonus_liquido", label: "PLR Líquido" },
-    { key: "total_ano_liquido", label: "Total/Ano Líquido", bold: true }
+    { key: "total_ano_liquido", label: "Total/Ano Líquido", bold: true },
   ],
   mensal: [
     { key: "drag_handle", label: "", isDragHandle: true },
@@ -63,7 +63,7 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
     { key: "bonus", label: "PLR" },
     { key: "outros", label: "Outros" },
     { key: "total_mes", label: "Total/Mês" },
-    { key: "total_mes_outros", label: "Total/Mês + Outros", bold: true }
+    { key: "total_mes_outros", label: "Total/Mês + Outros", bold: true },
   ],
   anual: [
     { key: "drag_handle", label: "", isDragHandle: true },
@@ -71,15 +71,15 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
     { key: "bonus_anual", label: "PLR" },
     { key: "outros_anual", label: "Outros/Ano" },
     { key: "total_ano", label: "Total/Ano" },
-    { key: "total_ano_outros", label: "Total/Ano + Outros", bold: true }
-  ]
+    { key: "total_ano_outros", label: "Total/Ano + Outros", bold: true },
+  ],
 };
 
 export function IncomeTable({
   incomes,
   onDelete,
   onUpdate,
-  onReorder
+  onReorder,
 }: IncomeTableProps) {
   const [viewType, setViewType] = useState<ViewType>("mensal");
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -229,7 +229,7 @@ export function IncomeTable({
     <Card>
       <Box p="4">
         <Flex justify="between" align="center" mb="4">
-          <Heading size="4">Comparativo de Rendimentos</Heading>
+          <Heading size="4">Rendimentos</Heading>
           <Flex align="center" gap="4">
             <Button
               variant="ghost"
@@ -307,13 +307,13 @@ export function IncomeTable({
                           backgroundColor: getRowBackgroundColor(income),
                           opacity: draggedId === income.id ? 0.5 : 1,
                           transition:
-                            "background-color 0.15s ease, opacity 0.15s ease"
+                            "background-color 0.15s ease, opacity 0.15s ease",
                         }}
                       >
                         <Table.Cell
                           style={{
                             width: "40px",
-                            padding: "8px 4px"
+                            padding: "8px 4px",
                           }}
                         >
                           <div
@@ -324,7 +324,7 @@ export function IncomeTable({
                                 draggedId === income.id ? "grabbing" : "grab",
                               padding: "4px",
                               borderRadius: "4px",
-                              transition: "background-color 0.2s ease"
+                              transition: "background-color 0.2s ease",
                             }}
                           >
                             <DragHandleDots2Icon width="18" height="18" />
@@ -334,7 +334,7 @@ export function IncomeTable({
                         <Table.Cell
                           style={{
                             width: "180px",
-                            padding: "8px 12px"
+                            padding: "8px 12px",
                           }}
                         >
                           <Flex
@@ -344,7 +344,7 @@ export function IncomeTable({
                             style={{
                               height: "100%",
                               width: "100%",
-                              minWidth: 0
+                              minWidth: 0,
                             }}
                           >
                             <Text
@@ -354,7 +354,7 @@ export function IncomeTable({
                                 maxWidth: "180px",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
-                                whiteSpace: "nowrap"
+                                whiteSpace: "nowrap",
                               }}
                             >
                               {income.name}
@@ -440,7 +440,7 @@ export function IncomeTable({
                               key={key}
                               style={{
                                 width: "240px",
-                                fontWeight: bold === true ? "bold" : "normal"
+                                fontWeight: bold === true ? "bold" : "normal",
                               }}
                             >
                               {getCellValue(income, key)}

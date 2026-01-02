@@ -6,6 +6,7 @@ import { db } from "./db/database";
 import { computeIncome } from "./utils/incomeCalculations";
 import { IncomeForm } from "./components/IncomeForm";
 import { IncomeTable } from "./components/IncomeTable";
+import { Header } from "./components/Header";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { useTheme } from "next-themes";
 import { exportToCSV } from "./utils/exportCSV";
@@ -75,7 +76,7 @@ export default function App() {
       await Promise.all(
         reorderedIncomes.map((income, newIndex) =>
           db.incomes.update(income.id, {
-            index: newIndex
+            index: newIndex,
           } as Partial<IncomeEntry>)
         )
       );
@@ -91,32 +92,36 @@ export default function App() {
         backgroundColor: isDark ? "#232323" : "#ffffff",
         color: isDark ? "#ffffff" : "#000000",
         minHeight: "100vh",
-        transition: "background-color 0.3s ease"
+        transition: "background-color 0.3s ease",
       }}
     >
-      <Container size="4">
-        <Box p="4">
-          <Flex justify="between" align="center" mb="6">
-            <Heading size="8">Comparador de Rendimentos</Heading>
-            <Flex gap="3" align="center">
-              <Button
-                onClick={() => exportToCSV(computedIncomes)}
-                disabled={computedIncomes.length === 0}
-                variant="soft"
-              >
-                <DownloadIcon /> Exportar
-              </Button>
-              <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
-            </Flex>
-          </Flex>
+      <Header isDark={isDark}>
+        <Button
+          onClick={() => exportToCSV(computedIncomes)}
+          disabled={computedIncomes.length === 0}
+          variant="soft"
+          style={{
+            borderRadius: "20px",
+            cursor: computedIncomes.length === 0 ? "not-allowed" : "pointer",
+          }}
+        >
+          <DownloadIcon /> Exportar
+        </Button>
+        <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+      </Header>
 
+      <Container size="4">
+        <Box p="4" style={{ paddingTop: "100px" }}>
           <Flex direction="column" gap="6">
-            <IncomeTable
-              incomes={computedIncomes}
-              onDelete={handleDeleteIncome}
-              onUpdate={handleUpdateIncome}
-              onReorder={handleReorderIncomes}
-            />
+            {computedIncomes.length > 0 && (
+              <IncomeTable
+                incomes={computedIncomes}
+                onDelete={handleDeleteIncome}
+                onUpdate={handleUpdateIncome}
+                onReorder={handleReorderIncomes}
+              />
+            )}
+
             <Card>
               <Box p="4">
                 <Heading size="4" mb="4">
