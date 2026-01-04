@@ -33,7 +33,12 @@ export interface ComputedIncome extends IncomeEntry {
   salarioLiquido: number;
   totalMesLiquido: number;
   totalAnoLiquido: number;
+  salarioAnualLiquido: number;
+  totalAnoOutrosLiquido: number;
   salarioHora: number;
   salarioHoraAnual: number;
   salarioHoraAnualOutros: number;
+  salarioHoraLiquido: number;
+  salarioHoraAnualLiquido: number;
+  salarioHoraAnualOutrosLiquido: number;
 }

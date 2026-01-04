@@ -56,7 +56,7 @@ export function computeIncome(entry: IncomeEntry): ComputedIncome {
   const salarioAnual = salarioMensal * 12;
   const totalPerYear = salarioAnual + bonusAmountAnual;
   const totalPerMonth = totalPerYear / 12;
-  const totalPerMonthPlusOthers = totalPerMonth + outros;
+  const totalPerMonthPlusOthers = salarioMensal + outros;
   const totalPerYearPlusOthers = totalPerYear + outros * 12;
 
   // Calculate hourly salary: annual salary / 52 weeks / 5 days / (hours per day)
@@ -78,6 +78,18 @@ export function computeIncome(entry: IncomeEntry): ComputedIncome {
   const salarioLiquido = Math.round((salarioBruto - inss - ir) * 100) / 100;
   const bonusLiquido = bonusAmountAnual - calculateBonusIR(bonusAmountAnual);
 
+  // Calculate hourly net salary
+  const salarioHoraLiquido = (salarioLiquido * 12) / 52 / 5 / hoursPerDay;
+  const salarioHoraAnualLiquido =
+    (salarioLiquido * 12 + bonusLiquido) / 52 / 5 / hoursPerDay;
+  const salarioHoraAnualOutrosLiquido =
+    (salarioLiquido * 12 + bonusLiquido + outros * 12) / 52 / 5 / hoursPerDay;
+
+  // Calculate annual net salary
+  const salarioAnualLiquido = salarioLiquido * 12;
+  const totalAnoOutrosLiquido =
+    salarioLiquido * 12 + bonusLiquido + outros * 12;
+
   return {
     ...entry,
     id: entry.id || 0,
@@ -93,10 +105,15 @@ export function computeIncome(entry: IncomeEntry): ComputedIncome {
     totalAnoLiquido:
       Math.round((salarioLiquido * 12 + outros * 12 + bonusLiquido) * 100) /
       100,
+    salarioAnualLiquido: Math.round(salarioAnualLiquido * 100) / 100,
+    totalAnoOutrosLiquido: Math.round(totalAnoOutrosLiquido * 100) / 100,
     bonusLiquido: Math.round(bonusLiquido * 100) / 100,
     salarioHora,
     salarioHoraAnual,
     salarioHoraAnualOutros,
+    salarioHoraLiquido,
+    salarioHoraAnualLiquido,
+    salarioHoraAnualOutrosLiquido,
     outrosAnual: outros * 12
   };
 }

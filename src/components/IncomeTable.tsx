@@ -10,13 +10,14 @@ import {
   ContextMenu,
   Dialog,
   Popover,
+  Switch
 } from "@radix-ui/themes";
 import {
   TrashIcon,
   Pencil1Icon,
   DragHandleDots2Icon,
   InfoCircledIcon,
-  SliderIcon,
+  SliderIcon
 } from "@radix-ui/react-icons";
 import type { ComputedIncome, IncomeEntry } from "../types/income";
 import { formatCurrencySimple } from "../utils/formatting";
@@ -32,47 +33,60 @@ interface IncomeTableProps {
   onReorder?: (incomes: ComputedIncome[]) => void;
 }
 
-type ViewType = "hora" | "liquido" | "mensal" | "anual";
+type ViewType = "hora" | "mensal" | "anual";
 
 interface ColumnConfig {
   key: string;
   label: string;
   bold?: boolean;
   isDragHandle?: boolean;
+  liquidoField?: string;
 }
 
 const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
   hora: [
     { key: "drag_handle", label: "", isDragHandle: true },
     { key: "jornada", label: "Jornada" },
-    { key: "hora", label: "Salário/Hora" },
-    { key: "hora_anual", label: "Total + PLR" },
-    { key: "hora_anual_outros", label: "Total + PLR + Outros", bold: true },
-  ],
-  liquido: [
-    { key: "drag_handle", label: "", isDragHandle: true },
-    { key: "salario_liquido", label: "Salário Líquido" },
-    { key: "outros", label: "Outros" },
-    { key: "total_mes_liquido", label: "Total/Mês Líquido" },
-    { key: "bonus_liquido", label: "PLR Líquido" },
-    { key: "total_ano_liquido", label: "Total/Ano Líquido", bold: true },
+    { key: "hora", label: "Salário/Hora", liquidoField: "hora_liquido" },
+    {
+      key: "hora_anual_outros",
+      label: "Salário/Hora + Outros",
+      bold: true,
+      liquidoField: "hora_anual_outros_liquido"
+    }
   ],
   mensal: [
     { key: "drag_handle", label: "", isDragHandle: true },
-    { key: "salario_mensal", label: "Salário/Mês" },
-    { key: "bonus", label: "PLR" },
+    {
+      key: "salario_mensal",
+      label: "Salário/Mês",
+      liquidoField: "salario_mensal_liquido"
+    },
     { key: "outros", label: "Outros" },
-    { key: "total_mes", label: "Total/Mês" },
-    { key: "total_mes_outros", label: "Total/Mês + Outros", bold: true },
+    {
+      key: "total_mes_outros",
+      label: "Total/Mês + Outros",
+      bold: true,
+      liquidoField: "total_mes_outros_liquido"
+    }
   ],
   anual: [
     { key: "drag_handle", label: "", isDragHandle: true },
-    { key: "salario_anual", label: "Salário/Ano" },
-    { key: "bonus_anual", label: "PLR" },
+    {
+      key: "salario_anual",
+      label: "Salário/Ano",
+      liquidoField: "salario_anual_liquido"
+    },
+    { key: "bonus_anual", label: "PLR", liquidoField: "bonus_liquido" },
     { key: "outros_anual", label: "Outros/Ano" },
-    { key: "total_ano", label: "Total/Ano" },
-    { key: "total_ano_outros", label: "Total/Ano + Outros", bold: true },
-  ],
+    { key: "total_ano", label: "Total/Ano", liquidoField: "total_ano_liquido" },
+    {
+      key: "total_ano_outros",
+      label: "Total/Ano + Outros",
+      bold: true,
+      liquidoField: "total_ano_outros_liquido"
+    }
+  ]
 };
 
 export function IncomeTable({
@@ -82,20 +96,51 @@ export function IncomeTable({
   onCompareBaseIdChange,
   onDelete,
   onUpdate,
-  onReorder,
+  onReorder
 }: IncomeTableProps) {
   const [viewType, setViewType] = useState<ViewType>("mensal");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
   const [popoverOpenId, setPopoverOpenId] = useState<number | null>(null);
+  const [showLiquido, setShowLiquido] = useState<boolean>(false);
   const editingIncome = editingId
     ? incomes.find((i) => i.id === editingId)
     : null;
 
-  const getCellValue = (income: ComputedIncome, columnKey: string) => {
+  const getCellValue = (
+    income: ComputedIncome,
+    columnKey: string,
+    column?: ColumnConfig
+  ) => {
     const formatValue = (value: number) => "R$ " + formatCurrencySimple(value);
 
+    // If showLiquido is enabled and column has liquidoField, use the liquido field
+    if (showLiquido && column?.liquidoField) {
+      const liquidoKey = column.liquidoField;
+      switch (liquidoKey) {
+        case "hora_liquido":
+          return formatValue(income.salarioHoraLiquido);
+        case "hora_anual_outros_liquido":
+          return formatValue(income.salarioHoraAnualOutrosLiquido);
+        case "salario_mensal_liquido":
+          return formatValue(income.salarioLiquido);
+        case "total_mes_outros_liquido":
+          return formatValue(income.totalMesLiquido);
+        case "salario_anual_liquido":
+          return formatValue(income.salarioAnualLiquido);
+        case "bonus_liquido":
+          return formatValue(income.bonusLiquido);
+        case "total_ano_liquido":
+          return formatValue(income.totalAnoLiquido);
+        case "total_ano_outros_liquido":
+          return formatValue(income.totalAnoOutrosLiquido);
+        default:
+          break;
+      }
+    }
+
+    // Default behavior for non-liquido fields
     switch (columnKey) {
       case "jornada":
         return income.jornada;
@@ -232,12 +277,15 @@ export function IncomeTable({
         <Flex justify="between" align="center" mb="4">
           <Heading size="4">Rendimentos</Heading>
           <Flex align="center" gap="4">
+            <Flex align="center" gap="2">
+              <Text size="2">Líquido</Text>
+              <Switch checked={showLiquido} onCheckedChange={setShowLiquido} />
+            </Flex>
             <Tabs.Root
               value={viewType}
               onValueChange={(value) => setViewType(value as ViewType)}
             >
               <Tabs.List>
-                <Tabs.Trigger value="liquido">Líquido</Tabs.Trigger>
                 <Tabs.Trigger value="hora">Hora</Tabs.Trigger>
                 <Tabs.Trigger value="mensal">Mensal</Tabs.Trigger>
                 <Tabs.Trigger value="anual">Anual</Tabs.Trigger>
@@ -294,13 +342,13 @@ export function IncomeTable({
                           backgroundColor: getRowBackgroundColor(income),
                           opacity: draggedId === income.id ? 0.5 : 1,
                           transition:
-                            "background-color 0.15s ease, opacity 0.15s ease",
+                            "background-color 0.15s ease, opacity 0.15s ease"
                         }}
                       >
                         <Table.Cell
                           style={{
                             width: "40px",
-                            padding: "8px 4px",
+                            padding: "8px 4px"
                           }}
                         >
                           <div
@@ -311,7 +359,7 @@ export function IncomeTable({
                                 draggedId === income.id ? "grabbing" : "grab",
                               padding: "4px",
                               borderRadius: "4px",
-                              transition: "background-color 0.2s ease",
+                              transition: "background-color 0.2s ease"
                             }}
                           >
                             <DragHandleDots2Icon width="18" height="18" />
@@ -321,7 +369,7 @@ export function IncomeTable({
                         <Table.Cell
                           style={{
                             width: "180px",
-                            padding: "8px 12px",
+                            padding: "8px 12px"
                           }}
                         >
                           <Flex
@@ -331,7 +379,7 @@ export function IncomeTable({
                             style={{
                               height: "100%",
                               width: "100%",
-                              minWidth: 0,
+                              minWidth: 0
                             }}
                           >
                             <Text
@@ -341,7 +389,7 @@ export function IncomeTable({
                                 maxWidth: "180px",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
+                                whiteSpace: "nowrap"
                               }}
                             >
                               {income.name}
@@ -427,10 +475,14 @@ export function IncomeTable({
                               key={key}
                               style={{
                                 width: "240px",
-                                fontWeight: bold === true ? "bold" : "normal",
+                                fontWeight: bold === true ? "bold" : "normal"
                               }}
                             >
-                              {getCellValue(income, key)}
+                              {getCellValue(
+                                income,
+                                key,
+                                columns.find((col) => col.key === key)
+                              )}
                             </Table.Cell>
                           )
                         )}
@@ -438,6 +490,9 @@ export function IncomeTable({
                           <Table.Cell style={{ width: "120px" }}>
                             {(() => {
                               const boldKey = getBoldColumnKey();
+                              const boldColumn = VIEW_CONFIGS[viewType].find(
+                                (col) => col.bold
+                              );
                               const compareBase = getCompareBase();
                               if (
                                 !compareBase ||
@@ -448,11 +503,13 @@ export function IncomeTable({
                               }
                               const currentValue = getCellValue(
                                 income,
-                                boldKey
+                                boldKey,
+                                boldColumn
                               );
                               const baseValue = getCellValue(
                                 compareBase,
-                                boldKey
+                                boldKey,
+                                boldColumn
                               );
                               const currentNumeric = parseFloat(
                                 currentValue.replace("R$ ", "").replace(".", "")
