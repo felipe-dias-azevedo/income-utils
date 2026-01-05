@@ -2,11 +2,10 @@ import { Box, Container, Flex, Heading } from "@radix-ui/themes";
 import type { ReactNode } from "react";
 
 interface HeaderProps {
-  isDark: boolean;
   children?: ReactNode;
 }
 
-export function Header({ isDark, children }: HeaderProps) {
+export function Header({ children }: HeaderProps) {
   return (
     <Box
       style={{
@@ -17,7 +16,7 @@ export function Header({ isDark, children }: HeaderProps) {
         zIndex: 1000,
         display: "flex",
         justifyContent: "center",
-        pointerEvents: "none",
+        pointerEvents: "none"
       }}
     >
       <Container size="4" p="4">
@@ -27,18 +26,13 @@ export function Header({ isDark, children }: HeaderProps) {
             width: "100%",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
-            backgroundColor: isDark
-              ? "rgba(35, 35, 35, 0.7)"
-              : "rgba(255, 255, 255, 0.7)",
-            border: isDark
-              ? "1px solid rgba(255, 255, 255, 0.1)"
-              : "1px solid rgba(0, 0, 0, 0.1)",
-            borderRadius: "50px",
-            padding: "12px 24px",
-            boxShadow: isDark
-              ? "0 8px 32px rgba(0, 0, 0, 0.3)"
-              : "0 8px 32px rgba(0, 0, 0, 0.1)",
-            transition: "all 0.3s ease",
+            backgroundColor:
+              "color-mix(in srgb, var(--gray-2) 70%, transparent)",
+            border: "1px solid var(--gray-3)",
+            borderRadius: "var(--radius-6)",
+            padding: "var(--space-3) var(--space-5)",
+            boxShadow: "var(--shadow-5)",
+            transition: "all var(--transition-medium)"
           }}
         >
           <Flex justify="between" align="center" gap="4">
@@ -46,7 +40,7 @@ export function Header({ isDark, children }: HeaderProps) {
               size="6"
               style={{
                 margin: 0,
-                fontWeight: 700,
+                fontWeight: 700
               }}
             >
               Utilitários de Rendimentos

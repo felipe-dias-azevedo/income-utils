@@ -12,7 +12,7 @@ import { AlertDialogProvider } from "./components/AlertDialog.tsx";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <Theme panelBackground="translucent">
+      <Theme panelBackground="translucent" radius="full" accentColor="cyan">
         <AlertDialogProvider>
           <App />
         </AlertDialogProvider>

@@ -4,7 +4,7 @@ import {
   Box,
   Button,
   Flex,
-  Text,
+  Text
 } from "@radix-ui/themes";
 import { AlertContext } from "./AlertDialogContext";
 
@@ -22,7 +22,7 @@ export function AlertDialogProvider({ children }: { children: ReactNode }) {
     isOpen: false,
     title: "",
     message: "",
-    type: "alert",
+    type: "alert"
   });
   const [confirmResolver, setConfirmResolver] = useState<
     ((value: boolean) => void) | null
@@ -41,7 +41,7 @@ export function AlertDialogProvider({ children }: { children: ReactNode }) {
       isOpen: true,
       title: "Aviso",
       message,
-      type: "alert",
+      type: "alert"
     });
   };
 
@@ -52,7 +52,7 @@ export function AlertDialogProvider({ children }: { children: ReactNode }) {
         isOpen: true,
         title: "Confirmação",
         message,
-        type: "confirm",
+        type: "confirm"
       });
     });
   };

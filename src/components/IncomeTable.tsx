@@ -1,39 +1,40 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Box,
   Flex,
   Table,
   Card,
-  Heading,
   Text,
-  Tabs,
   ContextMenu,
   Dialog,
   Popover,
-  Switch
+  SegmentedControl,
+  Separator,
+  Button
 } from "@radix-ui/themes";
 import {
   TrashIcon,
   Pencil1Icon,
   DragHandleDots2Icon,
   InfoCircledIcon,
-  SliderIcon
+  SliderIcon,
+  EyeOpenIcon,
+  EyeClosedIcon
 } from "@radix-ui/react-icons";
 import type { ComputedIncome, IncomeEntry } from "../types/income";
 import { formatCurrencySimple } from "../utils/formatting";
 import { IncomeForm } from "./IncomeForm";
+import "../styles/table-animations.css";
 
 interface IncomeTableProps {
   incomes: ComputedIncome[];
-  isComparing: boolean;
-  compareBaseId: number | null;
-  onCompareBaseIdChange: (id: number | null) => void;
   onDelete: (id: number) => void;
   onUpdate: (id: number, entry: IncomeEntry) => void;
   onReorder?: (incomes: ComputedIncome[]) => void;
 }
 
 type ViewType = "hora" | "mensal" | "anual";
+type GrossType = "gross" | "net";
 
 interface ColumnConfig {
   key: string;
@@ -91,22 +92,23 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
 
 export function IncomeTable({
   incomes,
-  isComparing,
-  compareBaseId,
-  onCompareBaseIdChange,
   onDelete,
   onUpdate,
   onReorder
 }: IncomeTableProps) {
+  const [grossType, setGrossType] = useState<GrossType>("gross");
   const [viewType, setViewType] = useState<ViewType>("mensal");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
+  const [isComparing, setIsComparing] = useState(false);
+  const [compareBaseId, setCompareBaseId] = useState<number | null>(null);
   const [popoverOpenId, setPopoverOpenId] = useState<number | null>(null);
-  const [showLiquido, setShowLiquido] = useState<boolean>(false);
   const editingIncome = editingId
     ? incomes.find((i) => i.id === editingId)
     : null;
+
+  const showLiquido = useMemo(() => grossType === "net", [grossType]);
 
   const getCellValue = (
     income: ComputedIncome,
@@ -272,295 +274,320 @@ export function IncomeTable({
   };
 
   return (
-    <Card>
-      <Box p="4">
-        <Flex justify="between" align="center" mb="4">
-          <Heading size="4">Rendimentos</Heading>
-          <Flex align="center" gap="4">
-            <Flex align="center" gap="2">
-              <Text size="2">Líquido</Text>
-              <Switch checked={showLiquido} onCheckedChange={setShowLiquido} />
-            </Flex>
-            <Tabs.Root
+    <Card style={{ padding: 0 }}>
+      <Box>
+        <Flex justify="center" align="center" mt="4" mb="2">
+          <Flex align="center" gap="4" overflowX="auto" px="4">
+            <SegmentedControl.Root
+              value={grossType}
+              onValueChange={(value) => setGrossType(value as GrossType)}
+              className="segmented-colored"
+            >
+              <SegmentedControl.Item value="gross">Bruto</SegmentedControl.Item>
+              <SegmentedControl.Item value="net">Líquido</SegmentedControl.Item>
+            </SegmentedControl.Root>
+
+            <Separator orientation="vertical" />
+
+            <SegmentedControl.Root
               value={viewType}
               onValueChange={(value) => setViewType(value as ViewType)}
+              className="segmented-colored"
             >
-              <Tabs.List>
-                <Tabs.Trigger value="hora">Hora</Tabs.Trigger>
-                <Tabs.Trigger value="mensal">Mensal</Tabs.Trigger>
-                <Tabs.Trigger value="anual">Anual</Tabs.Trigger>
-              </Tabs.List>
-            </Tabs.Root>
+              <SegmentedControl.Item value="hora">Hora</SegmentedControl.Item>
+              <SegmentedControl.Item value="mensal">
+                Mensal
+              </SegmentedControl.Item>
+              <SegmentedControl.Item value="anual">Anual</SegmentedControl.Item>
+            </SegmentedControl.Root>
+
+            <Separator orientation="vertical" />
+
+            <Button
+              variant="surface"
+              onClick={() => {
+                setIsComparing(!isComparing);
+                if (!isComparing) {
+                  setCompareBaseId(null);
+                }
+              }}
+              title={isComparing ? "Desativar comparação" : "Ativar comparação"}
+            >
+              {isComparing ? <EyeOpenIcon /> : <EyeClosedIcon />}
+              <Text size="2">{isComparing ? "Comparando" : "Comparar"}</Text>
+            </Button>
+
+            {/* TODO: adicionar button trigger incomeForm on modal */}
           </Flex>
         </Flex>
+      </Box>
 
-        {incomes.length === 0 ? (
-          <Text color="gray">
-            Nenhum rendimento adicionado. Clique em "Adicionar" para começar.
-          </Text>
-        ) : (
-          <Box style={{ overflowX: "auto" }}>
-            <Table.Root>
-              <Table.Header>
-                <Table.Row>
-                  <Table.ColumnHeaderCell
-                    style={{ width: "40px" }}
-                  ></Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell style={{ width: "180px" }}>
-                    Nome
-                  </Table.ColumnHeaderCell>
-                  {columns.map(({ key, label, isDragHandle }) =>
-                    isDragHandle ? null : (
-                      <Table.ColumnHeaderCell
-                        key={key}
-                        style={{ width: "240px" }}
-                      >
-                        {label}
-                      </Table.ColumnHeaderCell>
-                    )
-                  )}
-                  {isComparing && (
-                    <Table.ColumnHeaderCell style={{ width: "120px" }}>
-                      Comparação
+      {incomes.length > 0 && (
+        <Box style={{ overflowX: "auto", borderRadius: "8px" }}>
+          <Table.Root>
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeaderCell
+                  style={{ width: "40px" }}
+                ></Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell style={{ width: "180px" }}>
+                  Nome
+                </Table.ColumnHeaderCell>
+                {columns.map(({ key, label, isDragHandle }) =>
+                  isDragHandle ? null : (
+                    <Table.ColumnHeaderCell
+                      key={key}
+                      style={{ width: "240px" }}
+                    >
+                      {label}
                     </Table.ColumnHeaderCell>
-                  )}
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
-                {incomes.map((income) => (
-                  <ContextMenu.Root key={income.id}>
-                    <ContextMenu.Trigger>
-                      <Table.Row
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, income.id)}
-                        onDragLeave={() => setDragOverId(null)}
-                        onDragEnter={() =>
-                          draggedId && setDragOverId(income.id)
-                        }
-                        onDragEnd={handleDragEnd}
+                  )
+                )}
+                {isComparing && (
+                  <Table.ColumnHeaderCell style={{ width: "120px" }}>
+                    Comparação
+                  </Table.ColumnHeaderCell>
+                )}
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {incomes.map((income) => (
+                <ContextMenu.Root key={income.id}>
+                  <ContextMenu.Trigger>
+                    <Table.Row
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, income.id)}
+                      onDragLeave={() => setDragOverId(null)}
+                      onDragEnter={() => draggedId && setDragOverId(income.id)}
+                      onDragEnd={handleDragEnd}
+                      style={{
+                        backgroundColor: getRowBackgroundColor(income),
+                        opacity: draggedId === income.id ? 0.5 : 1,
+                        transition:
+                          "background-color 0.15s ease, opacity 0.15s ease"
+                      }}
+                    >
+                      <Table.Cell
                         style={{
-                          backgroundColor: getRowBackgroundColor(income),
-                          opacity: draggedId === income.id ? 0.5 : 1,
-                          transition:
-                            "background-color 0.15s ease, opacity 0.15s ease"
+                          width: "40px",
+                          padding: "8px 4px"
                         }}
                       >
-                        <Table.Cell
+                        <div
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, income.id)}
                           style={{
-                            width: "40px",
-                            padding: "8px 4px"
+                            cursor:
+                              draggedId === income.id ? "grabbing" : "grab",
+                            padding: "4px",
+                            borderRadius: "4px",
+                            transition: "background-color 0.2s ease"
                           }}
                         >
-                          <div
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, income.id)}
-                            style={{
-                              cursor:
-                                draggedId === income.id ? "grabbing" : "grab",
-                              padding: "4px",
-                              borderRadius: "4px",
-                              transition: "background-color 0.2s ease"
-                            }}
-                          >
-                            <DragHandleDots2Icon width="18" height="18" />
-                          </div>
-                        </Table.Cell>
+                          <DragHandleDots2Icon width="18" height="18" />
+                        </div>
+                      </Table.Cell>
 
-                        <Table.Cell
-                          style={{
-                            width: "180px",
-                            padding: "8px 12px"
-                          }}
-                        >
-                          <Flex
-                            align="center"
-                            justify="between"
-                            gap="2"
-                            style={{
-                              height: "100%",
-                              width: "100%",
-                              minWidth: 0
-                            }}
-                          >
-                            <Text
-                              size="2"
-                              weight="bold"
-                              style={{
-                                maxWidth: "180px",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap"
-                              }}
-                            >
-                              {income.name}
-                            </Text>
-                            <Popover.Root
-                              open={popoverOpenId === income.id}
-                              onOpenChange={(open) =>
-                                setPopoverOpenId(open ? income.id : null)
-                              }
-                            >
-                              <Popover.Trigger>
-                                <InfoCircledIcon
-                                  width="16"
-                                  height="16"
-                                  style={{ cursor: "pointer", flexShrink: 0 }}
-                                />
-                              </Popover.Trigger>
-                              <Popover.Content>
-                                <Box style={{ maxWidth: "250px" }}>
-                                  <Flex direction="column" gap="2">
-                                    <Box>
-                                      <Text size="1" weight="bold">
-                                        Nome:{" "}
-                                      </Text>
-                                      <Text size="1">{income.name}</Text>
-                                    </Box>
-                                    {income.description && (
-                                      <Box>
-                                        <Text size="1" weight="bold">
-                                          Descrição:{" "}
-                                        </Text>
-                                        <Text size="1">
-                                          {income.description}
-                                        </Text>
-                                      </Box>
-                                    )}
-                                    <Box>
-                                      <Text size="1" weight="bold">
-                                        Salário Mensal:{" "}
-                                      </Text>
-                                      <Text size="1">
-                                        R${" "}
-                                        {formatCurrencySimple(
-                                          income.salarioMensal
-                                        )}
-                                      </Text>
-                                    </Box>
-                                    <Box>
-                                      <Text size="1" weight="bold">
-                                        Multiplicador PLR:{" "}
-                                      </Text>
-                                      <Text size="1">
-                                        {income.bonusMultiplier
-                                          .toFixed(2)
-                                          .replace(".", ",")}
-                                        x
-                                      </Text>
-                                    </Box>
-                                    <Box>
-                                      <Text size="1" weight="bold">
-                                        Outros:{" "}
-                                      </Text>
-                                      <Text size="1">
-                                        R$ {formatCurrencySimple(income.outros)}
-                                      </Text>
-                                    </Box>
-                                    <Box>
-                                      <Text size="1" weight="bold">
-                                        Jornada:{" "}
-                                      </Text>
-                                      <Text size="1">{income.jornada}</Text>
-                                    </Box>
-                                  </Flex>
-                                </Box>
-                              </Popover.Content>
-                            </Popover.Root>
-                          </Flex>
-                        </Table.Cell>
-
-                        {columns.map(({ key, bold, isDragHandle }) =>
-                          isDragHandle ? null : (
-                            <Table.Cell
-                              key={key}
-                              style={{
-                                width: "240px",
-                                fontWeight: bold === true ? "bold" : "normal"
-                              }}
-                            >
-                              {getCellValue(
-                                income,
-                                key,
-                                columns.find((col) => col.key === key)
-                              )}
-                            </Table.Cell>
-                          )
-                        )}
-                        {isComparing && (
-                          <Table.Cell style={{ width: "120px" }}>
-                            {(() => {
-                              const boldKey = getBoldColumnKey();
-                              const boldColumn = VIEW_CONFIGS[viewType].find(
-                                (col) => col.bold
-                              );
-                              const compareBase = getCompareBase();
-                              if (
-                                !compareBase ||
-                                !boldKey ||
-                                income.id === compareBase.id
-                              ) {
-                                return <Text size="2">—</Text>;
-                              }
-                              const currentValue = getCellValue(
-                                income,
-                                boldKey,
-                                boldColumn
-                              );
-                              const baseValue = getCellValue(
-                                compareBase,
-                                boldKey,
-                                boldColumn
-                              );
-                              const currentNumeric = parseFloat(
-                                currentValue.replace("R$ ", "").replace(".", "")
-                              );
-                              const baseNumeric = parseFloat(
-                                baseValue.replace("R$ ", "").replace(".", "")
-                              );
-                              const percentage = calculatePercentageDifference(
-                                currentNumeric,
-                                baseNumeric
-                              );
-                              return (
-                                <Text
-                                  size="2"
-                                  weight="bold"
-                                  color={getPercentageColor(percentage)}
-                                >
-                                  {percentage}
-                                </Text>
-                              );
-                            })()}
-                          </Table.Cell>
-                        )}
-                      </Table.Row>
-                    </ContextMenu.Trigger>
-                    <ContextMenu.Content>
-                      <ContextMenu.Item onClick={() => setEditingId(income.id)}>
-                        <Pencil1Icon /> Editar
-                      </ContextMenu.Item>
-                      {isComparing && (
-                        <ContextMenu.Item
-                          onClick={() => onCompareBaseIdChange(income.id)}
-                        >
-                          <SliderIcon />
-                          Comparar com este
-                        </ContextMenu.Item>
-                      )}
-                      <ContextMenu.Item
-                        color="red"
-                        onClick={() => onDelete(income.id)}
+                      <Table.Cell
+                        style={{
+                          width: "180px",
+                          padding: "8px 12px"
+                        }}
                       >
-                        <TrashIcon /> Deletar
+                        <Flex
+                          align="center"
+                          justify="between"
+                          gap="2"
+                          style={{
+                            height: "100%",
+                            width: "100%",
+                            minWidth: 0
+                          }}
+                        >
+                          <Text
+                            size="2"
+                            weight="bold"
+                            style={{
+                              maxWidth: "180px",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap"
+                            }}
+                          >
+                            {income.name}
+                          </Text>
+                          <Popover.Root
+                            open={popoverOpenId === income.id}
+                            onOpenChange={(open) =>
+                              setPopoverOpenId(open ? income.id : null)
+                            }
+                          >
+                            <Popover.Trigger
+                              onMouseEnter={() => setPopoverOpenId(income.id)}
+                              onMouseLeave={() => setPopoverOpenId(null)}
+                            >
+                              <InfoCircledIcon
+                                width="16"
+                                height="16"
+                                style={{ cursor: "pointer", flexShrink: 0 }}
+                              />
+                            </Popover.Trigger>
+                            <Popover.Content
+                              onMouseEnter={() => setPopoverOpenId(income.id)}
+                              onMouseLeave={() => setPopoverOpenId(null)}
+                            >
+                              <Box style={{ maxWidth: "250px" }}>
+                                <Flex direction="column" gap="2">
+                                  <Box>
+                                    <Text size="1" weight="bold">
+                                      Nome:{" "}
+                                    </Text>
+                                    <Text size="1">{income.name}</Text>
+                                  </Box>
+                                  {income.description && (
+                                    <Box>
+                                      <Text size="1" weight="bold">
+                                        Descrição:{" "}
+                                      </Text>
+                                      <Text size="1">{income.description}</Text>
+                                    </Box>
+                                  )}
+                                  <Box>
+                                    <Text size="1" weight="bold">
+                                      Salário Mensal:{" "}
+                                    </Text>
+                                    <Text size="1">
+                                      R${" "}
+                                      {formatCurrencySimple(
+                                        income.salarioMensal
+                                      )}
+                                    </Text>
+                                  </Box>
+                                  <Box>
+                                    <Text size="1" weight="bold">
+                                      Multiplicador PLR:{" "}
+                                    </Text>
+                                    <Text size="1">
+                                      {income.bonusMultiplier
+                                        .toFixed(2)
+                                        .replace(".", ",")}
+                                      x
+                                    </Text>
+                                  </Box>
+                                  <Box>
+                                    <Text size="1" weight="bold">
+                                      Outros:{" "}
+                                    </Text>
+                                    <Text size="1">
+                                      R$ {formatCurrencySimple(income.outros)}
+                                    </Text>
+                                  </Box>
+                                  <Box>
+                                    <Text size="1" weight="bold">
+                                      Jornada:{" "}
+                                    </Text>
+                                    <Text size="1">{income.jornada}</Text>
+                                  </Box>
+                                </Flex>
+                              </Box>
+                            </Popover.Content>
+                          </Popover.Root>
+                        </Flex>
+                      </Table.Cell>
+
+                      {columns.map(({ key, bold, isDragHandle }) =>
+                        isDragHandle ? null : (
+                          <Table.Cell
+                            key={`${income.id}-${key}-${showLiquido}`}
+                            style={{
+                              width: "240px",
+                              fontWeight: bold === true ? "bold" : "normal"
+                            }}
+                            className="table-cell-animated"
+                          >
+                            {getCellValue(
+                              income,
+                              key,
+                              columns.find((col) => col.key === key)
+                            )}
+                          </Table.Cell>
+                        )
+                      )}
+                      {isComparing && (
+                        // TODO: comparing cell should also animate on change
+                        <Table.Cell style={{ width: "120px" }}>
+                          {(() => {
+                            const boldKey = getBoldColumnKey();
+                            const boldColumn = VIEW_CONFIGS[viewType].find(
+                              (col) => col.bold
+                            );
+                            const compareBase = getCompareBase();
+                            if (
+                              !compareBase ||
+                              !boldKey ||
+                              income.id === compareBase.id
+                            ) {
+                              return <Text size="2">—</Text>;
+                            }
+                            const currentValue = getCellValue(
+                              income,
+                              boldKey,
+                              boldColumn
+                            );
+                            const baseValue = getCellValue(
+                              compareBase,
+                              boldKey,
+                              boldColumn
+                            );
+                            const currentNumeric = parseFloat(
+                              currentValue.replace("R$ ", "").replace(".", "")
+                            );
+                            const baseNumeric = parseFloat(
+                              baseValue.replace("R$ ", "").replace(".", "")
+                            );
+                            const percentage = calculatePercentageDifference(
+                              currentNumeric,
+                              baseNumeric
+                            );
+                            return (
+                              <Text
+                                size="2"
+                                weight="bold"
+                                color={getPercentageColor(percentage)}
+                              >
+                                {percentage}
+                              </Text>
+                            );
+                          })()}
+                        </Table.Cell>
+                      )}
+                    </Table.Row>
+                  </ContextMenu.Trigger>
+                  <ContextMenu.Content>
+                    <ContextMenu.Item onClick={() => setEditingId(income.id)}>
+                      <Pencil1Icon /> Editar
+                    </ContextMenu.Item>
+                    {isComparing && (
+                      <ContextMenu.Item
+                        onClick={() => setCompareBaseId(income.id)}
+                      >
+                        <SliderIcon />
+                        Comparar com este
                       </ContextMenu.Item>
-                    </ContextMenu.Content>
-                  </ContextMenu.Root>
-                ))}
-              </Table.Body>
-            </Table.Root>
-          </Box>
-        )}
-      </Box>
+                    )}
+                    <ContextMenu.Item
+                      color="red"
+                      onClick={() => onDelete(income.id)}
+                    >
+                      <TrashIcon /> Deletar
+                    </ContextMenu.Item>
+                  </ContextMenu.Content>
+                </ContextMenu.Root>
+              ))}
+            </Table.Body>
+          </Table.Root>
+        </Box>
+      )}
 
       {editingIncome && editingId !== null && (
         <Dialog.Root

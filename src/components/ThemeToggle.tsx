@@ -10,13 +10,7 @@ export function ThemeToggle({ isDark, onToggle }: ThemeToggleProps) {
   return (
     <IconButton
       onClick={onToggle}
-      variant="ghost"
-      size="3"
-      ml="2"
-      mr="2"
-      style={{
-        borderRadius: "20px",
-      }}
+      variant="surface"
       title={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
     >
       {isDark ? <SunIcon /> : <MoonIcon />}

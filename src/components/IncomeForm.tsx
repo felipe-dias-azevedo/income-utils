@@ -6,7 +6,7 @@ import {
   formatCurrencyInput,
   formatPercentageInput,
   formatCurrencySimple,
-  parseCurrencyString,
+  parseCurrencyString
 } from "../utils/formatting";
 import { useAlertDialog } from "./AlertDialogContext";
 
@@ -22,7 +22,7 @@ const RADIX_COLORS = [
   "purple",
   "pink",
   "brown",
-  "gray",
+  "gray"
 ] as const;
 
 interface IncomeFormProps {
@@ -45,7 +45,7 @@ export function IncomeForm({
   onSubmit,
   isLoading = false,
   initialData,
-  isEditing = false,
+  isEditing = false
 }: IncomeFormProps) {
   const [name, setName] = useState(initialData?.name || "");
   const [description, setDescription] = useState(
@@ -88,7 +88,7 @@ export function IncomeForm({
       jornada,
       color,
       createdAt: Date.now(),
-      index: initialData?.index || 0,
+      index: initialData?.index || 0
     };
 
     onSubmit(entry);
@@ -113,6 +113,7 @@ export function IncomeForm({
               type="text"
               placeholder="Ex: Empresa A (max 20 caracteres)"
               value={name}
+              radius="large"
               maxLength={20}
               onChange={(e) => setName(e.target.value)}
             />
@@ -128,6 +129,7 @@ export function IncomeForm({
               type="text"
               placeholder="Ex: Cargo de desenvolvedor (max 30 caracteres)"
               value={description}
+              radius="large"
               maxLength={30}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -143,6 +145,7 @@ export function IncomeForm({
               type="text"
               placeholder="Ex: R$ 3.000,00"
               value={salarioMensal}
+              radius="large"
               onChange={(e) =>
                 setSalarioMensal(formatCurrencyInput(e.target.value))
               }
@@ -159,6 +162,7 @@ export function IncomeForm({
               type="text"
               placeholder="Ex: 1,5 (150% do salário)"
               value={bonusMultiplier}
+              radius="large"
               onChange={(e) =>
                 setBonusMultiplier(formatPercentageInput(e.target.value))
               }
@@ -175,6 +179,7 @@ export function IncomeForm({
               type="text"
               placeholder="Ex: R$ 500,00"
               value={outros}
+              radius="large"
               onChange={(e) => setOutros(formatCurrencyInput(e.target.value))}
             />
           </label>
@@ -224,7 +229,7 @@ export function IncomeForm({
                           border:
                             c === "transparent"
                               ? "1px solid var(--gray-7)"
-                              : "none",
+                              : "none"
                         }}
                       />
                       {c.charAt(0).toUpperCase() + c.slice(1)}

@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  Box,
-  Container,
-  Flex,
-  Heading,
-  Card,
-  Button,
-  Text,
-} from "@radix-ui/themes";
+import { Box, Container, Flex, Heading, Card, Button } from "@radix-ui/themes";
 import { useLiveQuery } from "dexie-react-hooks";
 import type { IncomeEntry, ComputedIncome } from "./types/income";
 import { db } from "./db/database";
@@ -19,17 +11,12 @@ import { useAlertDialog } from "./components/AlertDialogContext";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { useTheme } from "next-themes";
 import { exportToCSV } from "./utils/exportCSV";
-import {
-  DownloadIcon,
-  EyeClosedIcon,
-  EyeOpenIcon,
-} from "@radix-ui/react-icons";
+import { DownloadIcon } from "@radix-ui/react-icons";
 
 export default function App() {
   const { theme, setTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
-  const [isComparing, setIsComparing] = useState(false);
-  const [compareBaseId, setCompareBaseId] = useState<number | null>(null);
+
   const { alert, confirm } = useAlertDialog();
 
   const isDark = theme === "dark";
@@ -92,7 +79,7 @@ export default function App() {
       await Promise.all(
         reorderedIncomes.map((income, newIndex) =>
           db.incomes.update(income.id, {
-            index: newIndex,
+            index: newIndex
           } as Partial<IncomeEntry>)
         )
       );
@@ -105,36 +92,18 @@ export default function App() {
   return (
     <Box
       style={{
-        backgroundColor: isDark ? "#232323" : "#ffffff",
-        color: isDark ? "#ffffff" : "#000000",
+        backgroundColor: "var(--gray-2)",
         minHeight: "100vh",
-        transition: "background-color 0.3s ease",
+        transition: "background-color 0.3s ease"
       }}
     >
-      <Header isDark={isDark}>
-        <Button
-          variant="soft"
-          style={{
-            borderRadius: "20px",
-          }}
-          onClick={() => {
-            setIsComparing(!isComparing);
-            if (!isComparing) {
-              setCompareBaseId(null);
-            }
-          }}
-          title={isComparing ? "Desativar comparação" : "Ativar comparação"}
-        >
-          {isComparing ? <EyeOpenIcon /> : <EyeClosedIcon />}
-          <Text size="2">{isComparing ? "Comparando" : "Comparar"}</Text>
-        </Button>
+      <Header>
         <Button
           onClick={() => exportToCSV(computedIncomes)}
           disabled={computedIncomes.length === 0}
-          variant="soft"
+          variant="surface"
           style={{
-            borderRadius: "20px",
-            cursor: computedIncomes.length === 0 ? "not-allowed" : "pointer",
+            cursor: computedIncomes.length === 0 ? "not-allowed" : "pointer"
           }}
         >
           <DownloadIcon /> Exportar
@@ -143,7 +112,7 @@ export default function App() {
       </Header>
 
       <Container size="4">
-        <Box p="4" style={{ paddingTop: "100px" }}>
+        <Box p="4" pb="6" style={{ paddingTop: "100px" }}>
           <Flex direction="column" gap="6">
             {computedIncomes.length > 0 && (
               <IncomeTable
@@ -151,9 +120,6 @@ export default function App() {
                 onDelete={handleDeleteIncome}
                 onUpdate={handleUpdateIncome}
                 onReorder={handleReorderIncomes}
-                isComparing={isComparing}
-                compareBaseId={compareBaseId}
-                onCompareBaseIdChange={setCompareBaseId}
               />
             )}
 
