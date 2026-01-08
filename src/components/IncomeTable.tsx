@@ -18,8 +18,7 @@ import {
   DragHandleDots2Icon,
   InfoCircledIcon,
   SliderIcon,
-  EyeOpenIcon,
-  EyeClosedIcon
+  PlusIcon
 } from "@radix-ui/react-icons";
 import type { ComputedIncome, IncomeEntry } from "../types/income";
 import { formatCurrencySimple } from "../utils/formatting";
@@ -51,7 +50,7 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
     { key: "hora", label: "Salário/Hora", liquidoField: "hora_liquido" },
     {
       key: "hora_anual_outros",
-      label: "Salário/Hora + Outros",
+      label: "Total/Hora",
       bold: true,
       liquidoField: "hora_anual_outros_liquido"
     }
@@ -63,10 +62,10 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
       label: "Salário/Mês",
       liquidoField: "salario_mensal_liquido"
     },
-    { key: "outros", label: "Outros" },
+    { key: "outros", label: "Benefícios" },
     {
       key: "total_mes_outros",
-      label: "Total/Mês + Outros",
+      label: "Total/Mês",
       bold: true,
       liquidoField: "total_mes_outros_liquido"
     }
@@ -79,11 +78,15 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
       liquidoField: "salario_anual_liquido"
     },
     { key: "bonus_anual", label: "PLR", liquidoField: "bonus_liquido" },
-    { key: "outros_anual", label: "Outros/Ano" },
-    { key: "total_ano", label: "Total/Ano", liquidoField: "total_ano_liquido" },
+    {
+      key: "total_ano",
+      label: "Salário + PLR",
+      liquidoField: "total_ano_liquido"
+    },
+    { key: "outros_anual", label: "Benefícios/Ano" },
     {
       key: "total_ano_outros",
-      label: "Total/Ano + Outros",
+      label: "Total/Ano",
       bold: true,
       liquidoField: "total_ano_outros_liquido"
     }
@@ -101,7 +104,6 @@ export function IncomeTable({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
-  const [isComparing, setIsComparing] = useState(false);
   const [compareBaseId, setCompareBaseId] = useState<number | null>(null);
   const [popoverOpenId, setPopoverOpenId] = useState<number | null>(null);
   const editingIncome = editingId
@@ -249,13 +251,12 @@ export function IncomeTable({
     return boldColumn?.key || "";
   };
 
-  const getCompareBase = (): ComputedIncome | null => {
-    if (!isComparing) return null;
+  const compareBase = useMemo(() => {
     if (compareBaseId !== null) {
       return incomes.find((i) => i.id === compareBaseId) || null;
     }
     return incomes[0] || null;
-  };
+  }, [compareBaseId, incomes]);
 
   const calculatePercentageDifference = (
     currentValue: number,
@@ -276,8 +277,15 @@ export function IncomeTable({
   return (
     <Card style={{ padding: 0 }}>
       <Box>
-        <Flex justify="center" align="center" mt="4" mb="2">
-          <Flex align="center" gap="4" overflowX="auto" px="4">
+        <Flex
+          justify="between"
+          align="center"
+          mt="4"
+          mb="2"
+          px="4"
+          overflowX="auto"
+        >
+          <Flex align="center" gap="4">
             <SegmentedControl.Root
               value={grossType}
               onValueChange={(value) => setGrossType(value as GrossType)}
@@ -301,24 +309,11 @@ export function IncomeTable({
               <SegmentedControl.Item value="anual">Anual</SegmentedControl.Item>
             </SegmentedControl.Root>
 
-            <Separator orientation="vertical" />
-
-            <Button
-              variant="surface"
-              onClick={() => {
-                setIsComparing(!isComparing);
-                if (!isComparing) {
-                  setCompareBaseId(null);
-                }
-              }}
-              title={isComparing ? "Desativar comparação" : "Ativar comparação"}
-            >
-              {isComparing ? <EyeOpenIcon /> : <EyeClosedIcon />}
-              <Text size="2">{isComparing ? "Comparando" : "Comparar"}</Text>
-            </Button>
-
             {/* TODO: adicionar button trigger incomeForm on modal */}
           </Flex>
+          <Button variant="surface">
+            <PlusIcon /> Adicionar
+          </Button>
         </Flex>
       </Box>
 
@@ -330,24 +325,22 @@ export function IncomeTable({
                 <Table.ColumnHeaderCell
                   style={{ width: "40px" }}
                 ></Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell style={{ width: "180px" }}>
+                <Table.ColumnHeaderCell style={{ minWidth: "180px" }}>
                   Nome
                 </Table.ColumnHeaderCell>
                 {columns.map(({ key, label, isDragHandle }) =>
                   isDragHandle ? null : (
                     <Table.ColumnHeaderCell
                       key={key}
-                      style={{ width: "240px" }}
+                      style={{ minWidth: "140px" }}
                     >
                       {label}
                     </Table.ColumnHeaderCell>
                   )
                 )}
-                {isComparing && (
-                  <Table.ColumnHeaderCell style={{ width: "120px" }}>
-                    Comparação
-                  </Table.ColumnHeaderCell>
-                )}
+                <Table.ColumnHeaderCell style={{ minWidth: "120px" }}>
+                  Comparação
+                </Table.ColumnHeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
@@ -369,29 +362,26 @@ export function IncomeTable({
                     >
                       <Table.Cell
                         style={{
-                          width: "40px",
-                          padding: "8px 4px"
+                          width: "40px"
                         }}
                       >
-                        <div
+                        <Flex
                           draggable
                           onDragStart={(e) => handleDragStart(e, income.id)}
+                          align="center"
                           style={{
                             cursor:
                               draggedId === income.id ? "grabbing" : "grab",
-                            padding: "4px",
-                            borderRadius: "4px",
                             transition: "background-color 0.2s ease"
                           }}
                         >
                           <DragHandleDots2Icon width="18" height="18" />
-                        </div>
+                        </Flex>
                       </Table.Cell>
-
                       <Table.Cell
                         style={{
-                          width: "180px",
-                          padding: "8px 12px"
+                          minWidth: "180px",
+                          maxWidth: "180px"
                         }}
                       >
                         <Flex
@@ -476,7 +466,7 @@ export function IncomeTable({
                                   </Box>
                                   <Box>
                                     <Text size="1" weight="bold">
-                                      Outros:{" "}
+                                      Benefícios:{" "}
                                     </Text>
                                     <Text size="1">
                                       R$ {formatCurrencySimple(income.outros)}
@@ -494,80 +484,84 @@ export function IncomeTable({
                           </Popover.Root>
                         </Flex>
                       </Table.Cell>
-
-                      {columns.map(({ key, bold, isDragHandle }) =>
-                        isDragHandle ? null : (
-                          <Table.Cell
-                            key={`${income.id}-${key}-${showLiquido}`}
-                            style={{
-                              width: "240px",
-                              fontWeight: bold === true ? "bold" : "normal"
-                            }}
-                            className="table-cell-animated"
-                          >
-                            {getCellValue(
-                              income,
-                              key,
-                              columns.find((col) => col.key === key)
-                            )}
-                          </Table.Cell>
-                        )
+                      {columns.map(
+                        ({ key, bold, isDragHandle, liquidoField }) =>
+                          isDragHandle ? null : (
+                            <Table.Cell
+                              key={
+                                liquidoField === undefined
+                                  ? `${income.id}-${key}`
+                                  : `${income.id}-${key}-${showLiquido}`
+                              }
+                              style={{
+                                minWidth: "140px",
+                                fontWeight: bold === true ? "bold" : "normal"
+                              }}
+                              className="table-cell-animated"
+                            >
+                              {getCellValue(
+                                income,
+                                key,
+                                columns.find((col) => col.key === key)
+                              )}
+                            </Table.Cell>
+                          )
                       )}
-                      {isComparing && (
-                        // TODO: comparing cell should also animate on change
-                        <Table.Cell style={{ width: "120px" }}>
-                          {(() => {
-                            const boldKey = getBoldColumnKey();
-                            const boldColumn = VIEW_CONFIGS[viewType].find(
-                              (col) => col.bold
-                            );
-                            const compareBase = getCompareBase();
-                            if (
-                              !compareBase ||
-                              !boldKey ||
-                              income.id === compareBase.id
-                            ) {
-                              return <Text size="2">—</Text>;
-                            }
-                            const currentValue = getCellValue(
-                              income,
-                              boldKey,
-                              boldColumn
-                            );
-                            const baseValue = getCellValue(
-                              compareBase,
-                              boldKey,
-                              boldColumn
-                            );
-                            const currentNumeric = parseFloat(
-                              currentValue.replace("R$ ", "").replace(".", "")
-                            );
-                            const baseNumeric = parseFloat(
-                              baseValue.replace("R$ ", "").replace(".", "")
-                            );
-                            const percentage = calculatePercentageDifference(
-                              currentNumeric,
-                              baseNumeric
-                            );
-                            return (
-                              <Text
-                                size="2"
-                                weight="bold"
-                                color={getPercentageColor(percentage)}
-                              >
-                                {percentage}
-                              </Text>
-                            );
-                          })()}
-                        </Table.Cell>
-                      )}
+                      <Table.Cell
+                        key={`${income.id}-compare-${showLiquido}-${viewType}`}
+                        style={{ minWidth: "120px" }}
+                        className="table-cell-animated"
+                      >
+                        {(() => {
+                          const boldKey = getBoldColumnKey();
+                          const boldColumn = VIEW_CONFIGS[viewType].find(
+                            (col) => col.bold
+                          );
+                          if (
+                            !compareBase ||
+                            !boldKey ||
+                            income.id === compareBase.id
+                          ) {
+                            return <Text size="2">—</Text>;
+                          }
+                          const currentValue = getCellValue(
+                            income,
+                            boldKey,
+                            boldColumn
+                          );
+                          const baseValue = getCellValue(
+                            compareBase,
+                            boldKey,
+                            boldColumn
+                          );
+                          const currentNumeric = parseFloat(
+                            currentValue.replace("R$ ", "").replace(".", "")
+                          );
+                          const baseNumeric = parseFloat(
+                            baseValue.replace("R$ ", "").replace(".", "")
+                          );
+                          const percentage = calculatePercentageDifference(
+                            currentNumeric,
+                            baseNumeric
+                          );
+                          return (
+                            <Text
+                              size="2"
+                              weight="bold"
+                              color={getPercentageColor(percentage)}
+                            >
+                              {percentage}
+                            </Text>
+                          );
+                        })()}
+                      </Table.Cell>
                     </Table.Row>
                   </ContextMenu.Trigger>
                   <ContextMenu.Content>
                     <ContextMenu.Item onClick={() => setEditingId(income.id)}>
                       <Pencil1Icon /> Editar
                     </ContextMenu.Item>
-                    {isComparing && (
+                    {compareBase?.id !== income.id && (
                       <ContextMenu.Item
                         onClick={() => setCompareBaseId(income.id)}
                       >
@@ -597,7 +591,7 @@ export function IncomeTable({
           }}
         >
           <Dialog.Content>
-            <Dialog.Title>Editar Rendimento</Dialog.Title>
+            <Dialog.Title>Editar Renda</Dialog.Title>
             <Box p="4">
               <IncomeForm
                 initialData={{ ...editingIncome }}

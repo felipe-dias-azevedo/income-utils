@@ -83,7 +83,7 @@ export function exportToCSV(incomes: ComputedIncome[]): void {
   link.setAttribute("href", url);
   link.setAttribute(
     "download",
-    `rendimentos-${new Date().toISOString().split("T")[0]}.csv`
+    `comparativo-rendas-${new Date().toISOString().split("T")[0]}.csv`
   );
   link.style.visibility = "hidden";
 

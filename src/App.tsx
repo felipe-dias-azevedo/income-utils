@@ -44,19 +44,19 @@ export default function App() {
       await db.incomes.add({ ...entry, index: nextIndex });
     } catch (error) {
       console.error("Error adding income:", error);
-      alert("Erro ao adicionar rendimento");
+      alert("Erro ao adicionar renda");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDeleteIncome = async (id: number) => {
-    if (await confirm("Tem certeza que deseja remover este rendimento?")) {
+    if (await confirm("Tem certeza que deseja remover esta renda?")) {
       try {
         await db.incomes.delete(id);
       } catch (error) {
         console.error("Error deleting income:", error);
-        alert("Erro ao remover rendimento");
+        alert("Erro ao remover renda");
       }
     }
   };
@@ -67,7 +67,7 @@ export default function App() {
       await db.incomes.update(id, entry);
     } catch (error) {
       console.error("Error updating income:", error);
-      alert("Erro ao atualizar rendimento");
+      alert("Erro ao atualizar renda");
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +76,7 @@ export default function App() {
   const handleReorderIncomes = async (reorderedIncomes: ComputedIncome[]) => {
     try {
       // Update index for all items based on their new positions
+      // TODO: update bulk
       await Promise.all(
         reorderedIncomes.map((income, newIndex) =>
           db.incomes.update(income.id, {
@@ -85,14 +86,15 @@ export default function App() {
       );
     } catch (error) {
       console.error("Error reordering incomes:", error);
-      alert("Erro ao reordenar rendimentos");
+      alert("Erro ao reordenar rendas");
     }
   };
 
   return (
     <Box
+      className="bg-gradient"
       style={{
-        backgroundColor: "var(--gray-2)",
+        // backgroundColor: "var(--gray-2)",
         minHeight: "100vh",
         transition: "background-color 0.3s ease"
       }}
@@ -126,7 +128,7 @@ export default function App() {
             <Card>
               <Box p="4">
                 <Heading size="4" mb="4">
-                  Adicionar Rendimento
+                  Adicionar Renda
                 </Heading>
                 <IncomeForm
                   onSubmit={handleAddIncome}

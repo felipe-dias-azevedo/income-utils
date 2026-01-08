@@ -1,5 +1,17 @@
 body {
   margin: 0;
+  background-color: var(--gray-2);
+  transition: "all var(--transition-medium)";
+}
+
+.bg-gradient {
+  background: linear-gradient(
+    35deg,
+    var(--gray-2),
+    var(--accent-3),
+    var(--gray-2)
+  );
+  transition: "all var(--transition-medium)";
 }
 
 .segmented-colored {

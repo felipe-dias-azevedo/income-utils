@@ -103,8 +103,7 @@ export function computeIncome(entry: IncomeEntry): ComputedIncome {
     salarioLiquido,
     totalMesLiquido: Math.round((salarioLiquido + outros) * 100) / 100,
     totalAnoLiquido:
-      Math.round((salarioLiquido * 12 + outros * 12 + bonusLiquido) * 100) /
-      100,
+      Math.round((salarioLiquido * 12 + bonusLiquido) * 100) / 100,
     salarioAnualLiquido: Math.round(salarioAnualLiquido * 100) / 100,
     totalAnoOutrosLiquido: Math.round(totalAnoOutrosLiquido * 100) / 100,
     bonusLiquido: Math.round(bonusLiquido * 100) / 100,

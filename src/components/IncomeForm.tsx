@@ -139,7 +139,7 @@ export function IncomeForm({
         <Box>
           <label>
             <div style={{ marginBottom: "8px", fontSize: "14px" }}>
-              Salário Mensal *
+              Salário Mensal Bruto *
             </div>
             <TextField.Root
               type="text"
@@ -160,7 +160,7 @@ export function IncomeForm({
             </div>
             <TextField.Root
               type="text"
-              placeholder="Ex: 1,5 (150% do salário)"
+              placeholder="Ex: 1,5 (150% do salário mensal)"
               value={bonusMultiplier}
               radius="large"
               onChange={(e) =>
@@ -173,7 +173,7 @@ export function IncomeForm({
         <Box>
           <label>
             <div style={{ marginBottom: "8px", fontSize: "14px" }}>
-              Outros Rendimentos
+              Benefícios
             </div>
             <TextField.Root
               type="text"
@@ -211,6 +211,7 @@ export function IncomeForm({
         <Box>
           <label>
             <div style={{ marginBottom: "8px", fontSize: "14px" }}>Cor</div>
+            {/* TODO: translate colors to portuguese on display */}
             <Select.Root value={color} onValueChange={setColor}>
               <Select.Trigger />
               <Select.Content>

@@ -1,4 +1,11 @@
-import { Box, Container, Flex, Heading } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Container,
+  Flex,
+  Heading,
+  Tooltip
+} from "@radix-ui/themes";
 import type { ReactNode } from "react";
 
 interface HeaderProps {
@@ -36,15 +43,19 @@ export function Header({ children }: HeaderProps) {
           }}
         >
           <Flex justify="between" align="center" gap="4">
-            <Heading
-              size="6"
-              style={{
-                margin: 0,
-                fontWeight: 700
-              }}
-            >
-              Utilitários de Rendimentos
-            </Heading>
+            <Flex align="center" gap="3">
+              <Heading size="5">Utilitários de Renda</Heading>
+              <Tooltip content="Regras tributárias atualizadas para 2026">
+                <Badge
+                  size="3"
+                  radius="full"
+                  variant="soft"
+                  style={{ userSelect: "none" }}
+                >
+                  2026
+                </Badge>
+              </Tooltip>
+            </Flex>
 
             <Flex gap="3" align="center">
               {children}
