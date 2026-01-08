@@ -58,6 +58,7 @@ export function computeIncome(entry: IncomeEntry): ComputedIncome {
   const totalPerMonth = totalPerYear / 12;
   const totalPerMonthPlusOthers = salarioMensal + outros;
   const totalPerYearPlusOthers = totalPerYear + outros * 12;
+  const totalPerYearMinusBonusPlusOthers = salarioAnual + outros * 12;
 
   // Calculate hourly salary: annual salary / 52 weeks / 5 days / (hours per day)
   const jornadaHours =
@@ -69,7 +70,8 @@ export function computeIncome(entry: IncomeEntry): ComputedIncome {
   const hoursPerDay = jornadaHours / 5;
   const salarioHora = salarioAnual / 52 / 5 / hoursPerDay;
   const salarioHoraAnual = totalPerYear / 52 / 5 / hoursPerDay;
-  const salarioHoraAnualOutros = totalPerYearPlusOthers / 52 / 5 / hoursPerDay;
+  const salarioHoraAnualOutros =
+    totalPerYearMinusBonusPlusOthers / 52 / 5 / hoursPerDay;
 
   // Calculate net salary using proper Brazilian tax system
   const inss = calculateINSS(salarioBruto);
@@ -84,6 +86,8 @@ export function computeIncome(entry: IncomeEntry): ComputedIncome {
     (salarioLiquido * 12 + bonusLiquido) / 52 / 5 / hoursPerDay;
   const salarioHoraAnualOutrosLiquido =
     (salarioLiquido * 12 + bonusLiquido + outros * 12) / 52 / 5 / hoursPerDay;
+  const salarioHoraAnualMinusBonusOutrosLiquido =
+    (salarioLiquido * 12 + outros * 12) / 52 / 5 / hoursPerDay;
 
   // Calculate annual net salary
   const salarioAnualLiquido = salarioLiquido * 12;
@@ -113,6 +117,8 @@ export function computeIncome(entry: IncomeEntry): ComputedIncome {
     salarioHoraLiquido,
     salarioHoraAnualLiquido,
     salarioHoraAnualOutrosLiquido,
-    outrosAnual: outros * 12
+    outrosAnual: outros * 12,
+    totalPerYearMinusBonusPlusOthers,
+    salarioHoraAnualMinusBonusOutrosLiquido
   };
 }

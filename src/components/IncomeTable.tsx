@@ -10,7 +10,9 @@ import {
   Popover,
   SegmentedControl,
   Separator,
-  Button
+  Button,
+  IconButton,
+  DropdownMenu
 } from "@radix-ui/themes";
 import {
   TrashIcon,
@@ -18,7 +20,9 @@ import {
   DragHandleDots2Icon,
   InfoCircledIcon,
   SliderIcon,
-  PlusIcon
+  PlusIcon,
+  Cross2Icon,
+  DotsHorizontalIcon
 } from "@radix-ui/react-icons";
 import type { ComputedIncome, IncomeEntry } from "../types/income";
 import { formatCurrencySimple } from "../utils/formatting";
@@ -27,6 +31,7 @@ import "../styles/table-animations.css";
 
 interface IncomeTableProps {
   incomes: ComputedIncome[];
+  onAdd: (entry: IncomeEntry) => void;
   onDelete: (id: number) => void;
   onUpdate: (id: number, entry: IncomeEntry) => void;
   onReorder?: (incomes: ComputedIncome[]) => void;
@@ -95,6 +100,7 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
 
 export function IncomeTable({
   incomes,
+  onAdd,
   onDelete,
   onUpdate,
   onReorder
@@ -106,6 +112,7 @@ export function IncomeTable({
   const [dragOverId, setDragOverId] = useState<number | null>(null);
   const [compareBaseId, setCompareBaseId] = useState<number | null>(null);
   const [popoverOpenId, setPopoverOpenId] = useState<number | null>(null);
+  const [openedAddIncome, setOpenedAddIncome] = useState(false);
   const editingIncome = editingId
     ? incomes.find((i) => i.id === editingId)
     : null;
@@ -126,7 +133,7 @@ export function IncomeTable({
         case "hora_liquido":
           return formatValue(income.salarioHoraLiquido);
         case "hora_anual_outros_liquido":
-          return formatValue(income.salarioHoraAnualOutrosLiquido);
+          return formatValue(income.salarioHoraAnualMinusBonusOutrosLiquido);
         case "salario_mensal_liquido":
           return formatValue(income.salarioLiquido);
         case "total_mes_outros_liquido":
@@ -235,9 +242,6 @@ export function IncomeTable({
   };
 
   const getRowBackgroundColor = (income: ComputedIncome) => {
-    if (dragOverId === income.id && draggedId) {
-      return "var(--accent-9)";
-    }
     if (income.color && income.color !== "transparent") {
       return `var(--${income.color}-4)`;
     }
@@ -284,6 +288,7 @@ export function IncomeTable({
           mb="2"
           px="4"
           overflowX="auto"
+          gap="4"
         >
           <Flex align="center" gap="4">
             <SegmentedControl.Root
@@ -308,17 +313,20 @@ export function IncomeTable({
               </SegmentedControl.Item>
               <SegmentedControl.Item value="anual">Anual</SegmentedControl.Item>
             </SegmentedControl.Root>
-
-            {/* TODO: adicionar button trigger incomeForm on modal */}
           </Flex>
-          <Button variant="surface">
+          <Button variant="surface" onClick={() => setOpenedAddIncome(true)}>
             <PlusIcon /> Adicionar
           </Button>
         </Flex>
       </Box>
 
       {incomes.length > 0 && (
-        <Box style={{ overflowX: "auto", borderRadius: "8px" }}>
+        <Box
+          style={{
+            overflowX: "auto",
+            borderRadius: "8px"
+          }}
+        >
           <Table.Root>
             <Table.Header>
               <Table.Row>
@@ -338,9 +346,14 @@ export function IncomeTable({
                     </Table.ColumnHeaderCell>
                   )
                 )}
-                <Table.ColumnHeaderCell style={{ minWidth: "120px" }}>
+                <Table.ColumnHeaderCell
+                  style={{ minWidth: "120px", maxWidth: "120px" }}
+                >
                   Comparação
                 </Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell
+                  style={{ width: "40px" }}
+                ></Table.ColumnHeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
@@ -350,14 +363,21 @@ export function IncomeTable({
                     <Table.Row
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, income.id)}
-                      onDragLeave={() => setDragOverId(null)}
+                      onDragLeave={(e) => {
+                        if (e.currentTarget === e.target) {
+                          setDragOverId(null);
+                        }
+                      }}
                       onDragEnter={() => draggedId && setDragOverId(income.id)}
                       onDragEnd={handleDragEnd}
                       style={{
                         backgroundColor: getRowBackgroundColor(income),
-                        opacity: draggedId === income.id ? 0.5 : 1,
-                        transition:
-                          "background-color 0.15s ease, opacity 0.15s ease"
+                        opacity: draggedId === income.id ? 0.35 : 1,
+                        border:
+                          dragOverId === income.id && draggedId
+                            ? "2px dashed var(--accent-10)"
+                            : 0,
+                        transition: "border 50ms ease-out"
                       }}
                     >
                       <Table.Cell
@@ -509,7 +529,7 @@ export function IncomeTable({
                       )}
                       <Table.Cell
                         key={`${income.id}-compare-${showLiquido}-${viewType}`}
-                        style={{ minWidth: "120px" }}
+                        style={{ minWidth: "120px", maxWidth: "120px" }}
                         className="table-cell-animated"
                       >
                         {(() => {
@@ -555,6 +575,35 @@ export function IncomeTable({
                           );
                         })()}
                       </Table.Cell>
+                      <Table.Cell px="4" style={{ width: "40px" }}>
+                        <DropdownMenu.Root>
+                          <DropdownMenu.Trigger>
+                            <IconButton color="gray" size="2" variant="ghost">
+                              <DotsHorizontalIcon width="18" height="18" />
+                            </IconButton>
+                          </DropdownMenu.Trigger>
+                          <DropdownMenu.Content>
+                            <DropdownMenu.Item
+                              onClick={() => setEditingId(income.id)}
+                            >
+                              <Pencil1Icon /> Editar
+                            </DropdownMenu.Item>
+                            {compareBase?.id !== income.id && (
+                              <DropdownMenu.Item
+                                onClick={() => setCompareBaseId(income.id)}
+                              >
+                                <SliderIcon /> Comparar com este
+                              </DropdownMenu.Item>
+                            )}
+                            <DropdownMenu.Item
+                              color="red"
+                              onClick={() => onDelete(income.id)}
+                            >
+                              <TrashIcon /> Deletar
+                            </DropdownMenu.Item>
+                          </DropdownMenu.Content>
+                        </DropdownMenu.Root>
+                      </Table.Cell>
                     </Table.Row>
                   </ContextMenu.Trigger>
                   <ContextMenu.Content>
@@ -591,7 +640,15 @@ export function IncomeTable({
           }}
         >
           <Dialog.Content>
-            <Dialog.Title>Editar Renda</Dialog.Title>
+            <Flex justify="between" align="start" mt="4" px="4">
+              <Dialog.Title>Editar Renda</Dialog.Title>
+
+              <Dialog.Close>
+                <IconButton size="3" variant="ghost">
+                  <Cross2Icon width="18" height="18" />
+                </IconButton>
+              </Dialog.Close>
+            </Flex>
             <Box p="4">
               <IncomeForm
                 initialData={{ ...editingIncome }}
@@ -606,6 +663,29 @@ export function IncomeTable({
           </Dialog.Content>
         </Dialog.Root>
       )}
+
+      <Dialog.Root
+        open={openedAddIncome}
+        onOpenChange={(open) => {
+          if (!open) setOpenedAddIncome(false);
+        }}
+      >
+        <Dialog.Content>
+          <Flex justify="between" align="start" mt="4" px="4">
+            <Dialog.Title>Adicionar Renda</Dialog.Title>
+
+            <Dialog.Close>
+              <IconButton size="3" variant="ghost">
+                <Cross2Icon width="18" height="18" />
+              </IconButton>
+            </Dialog.Close>
+          </Flex>
+
+          <Box p="4">
+            <IncomeForm onSubmit={onAdd} isLoading={false} isEditing={false} />
+          </Box>
+        </Dialog.Content>
+      </Dialog.Root>
     </Card>
   );
 }

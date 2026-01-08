@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Box, Container, Flex, Heading, Card, Button } from "@radix-ui/themes";
 import { useLiveQuery } from "dexie-react-hooks";
 import type { IncomeEntry, ComputedIncome } from "./types/income";
@@ -31,8 +31,9 @@ export default function App() {
     []
   );
 
-  const computedIncomes: ComputedIncome[] = (incomeEntries || []).map((entry) =>
-    computeIncome(entry)
+  const computedIncomes: ComputedIncome[] = useMemo(
+    () => (incomeEntries || []).map(computeIncome),
+    [incomeEntries]
   );
 
   const handleAddIncome = async (entry: IncomeEntry) => {
@@ -75,14 +76,12 @@ export default function App() {
 
   const handleReorderIncomes = async (reorderedIncomes: ComputedIncome[]) => {
     try {
-      // Update index for all items based on their new positions
-      // TODO: update bulk
-      await Promise.all(
-        reorderedIncomes.map((income, newIndex) =>
-          db.incomes.update(income.id, {
-            index: newIndex
-          } as Partial<IncomeEntry>)
-        )
+      // Update index for all items based on their new positions using bulkUpdate
+      await db.incomes.bulkUpdate(
+        reorderedIncomes.map((income, newIndex) => ({
+          key: income.id,
+          changes: { index: newIndex }
+        }))
       );
     } catch (error) {
       console.error("Error reordering incomes:", error);
@@ -119,24 +118,27 @@ export default function App() {
             {computedIncomes.length > 0 && (
               <IncomeTable
                 incomes={computedIncomes}
+                onAdd={handleAddIncome}
                 onDelete={handleDeleteIncome}
                 onUpdate={handleUpdateIncome}
                 onReorder={handleReorderIncomes}
               />
             )}
 
-            <Card>
-              <Box p="4">
-                <Heading size="4" mb="4">
-                  Adicionar Renda
-                </Heading>
-                <IncomeForm
-                  onSubmit={handleAddIncome}
-                  isLoading={isLoading}
-                  isEditing={false}
-                />
-              </Box>
-            </Card>
+            {computedIncomes.length === 0 && (
+              <Card>
+                <Box p="4">
+                  <Heading size="4" mb="4">
+                    Adicionar Renda
+                  </Heading>
+                  <IncomeForm
+                    onSubmit={handleAddIncome}
+                    isLoading={isLoading}
+                    isEditing={false}
+                  />
+                </Box>
+              </Card>
+            )}
           </Flex>
         </Box>
       </Container>

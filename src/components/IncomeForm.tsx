@@ -25,6 +25,21 @@ const RADIX_COLORS = [
   "gray"
 ] as const;
 
+const COLOR_NAMES_PT: Record<(typeof RADIX_COLORS)[number], string> = {
+  transparent: "Transparente",
+  red: "Vermelho",
+  orange: "Laranja",
+  yellow: "Amarelo",
+  green: "Verde",
+  teal: "Verde Azulado",
+  cyan: "Ciano",
+  blue: "Azul",
+  purple: "Roxo",
+  pink: "Rosa",
+  brown: "Marrom",
+  gray: "Cinza"
+};
+
 interface IncomeFormProps {
   onSubmit: (entry: IncomeEntry) => void;
   isLoading?: boolean;
@@ -211,7 +226,6 @@ export function IncomeForm({
         <Box>
           <label>
             <div style={{ marginBottom: "8px", fontSize: "14px" }}>Cor</div>
-            {/* TODO: translate colors to portuguese on display */}
             <Select.Root value={color} onValueChange={setColor}>
               <Select.Trigger />
               <Select.Content>
@@ -233,7 +247,7 @@ export function IncomeForm({
                               : "none"
                         }}
                       />
-                      {c.charAt(0).toUpperCase() + c.slice(1)}
+                      {COLOR_NAMES_PT[c]}
                     </Flex>
                   </Select.Item>
                 ))}
