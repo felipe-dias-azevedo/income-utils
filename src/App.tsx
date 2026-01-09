@@ -1,93 +1,35 @@
-import { useMemo, useState } from "react";
-import { Box, Container, Flex, Heading, Card, Button } from "@radix-ui/themes";
-import { useLiveQuery } from "dexie-react-hooks";
-import type { IncomeEntry, ComputedIncome } from "./types/income";
-import { db } from "./db/database";
-import { computeIncome } from "./utils/incomeCalculations";
+import {
+  Box,
+  Container,
+  Flex,
+  Heading,
+  Card,
+  Button,
+  Spinner
+} from "@radix-ui/themes";
 import { IncomeForm } from "./components/IncomeForm";
 import { IncomeTable } from "./components/IncomeTable";
 import { Header } from "./components/Header";
-import { useAlertDialog } from "./components/AlertDialogContext";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { useTheme } from "next-themes";
 import { exportToCSV } from "./utils/exportCSV";
 import { DownloadIcon } from "@radix-ui/react-icons";
+import { useIncomeContext } from "./contexts/IncomeContext";
+import { useCallback, useMemo } from "react";
 
 export default function App() {
   const { theme, setTheme } = useTheme();
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    incomes,
+    isLoading,
+    actions: { isLoadingAction }
+  } = useIncomeContext();
 
-  const { alert, confirm } = useAlertDialog();
+  const isDark = useMemo(() => theme === "dark", [theme]);
 
-  const isDark = theme === "dark";
-
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setTheme(isDark ? "light" : "dark");
-  };
-
-  // Load all incomes from database, sorted by index
-  const incomeEntries = useLiveQuery(
-    () => db.incomes.orderBy("index").toArray(),
-    []
-  );
-
-  const computedIncomes: ComputedIncome[] = useMemo(
-    () => (incomeEntries || []).map(computeIncome),
-    [incomeEntries]
-  );
-
-  const handleAddIncome = async (entry: IncomeEntry) => {
-    setIsLoading(true);
-    try {
-      // Get the next index
-      const maxIndexItem = await db.incomes.orderBy("index").last();
-      const nextIndex = maxIndexItem ? maxIndexItem.index + 1 : 0;
-      await db.incomes.add({ ...entry, index: nextIndex });
-    } catch (error) {
-      console.error("Error adding income:", error);
-      alert("Erro ao adicionar renda");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteIncome = async (id: number) => {
-    if (await confirm("Tem certeza que deseja remover esta renda?")) {
-      try {
-        await db.incomes.delete(id);
-      } catch (error) {
-        console.error("Error deleting income:", error);
-        alert("Erro ao remover renda");
-      }
-    }
-  };
-
-  const handleUpdateIncome = async (id: number, entry: IncomeEntry) => {
-    setIsLoading(true);
-    try {
-      await db.incomes.update(id, entry);
-    } catch (error) {
-      console.error("Error updating income:", error);
-      alert("Erro ao atualizar renda");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleReorderIncomes = async (reorderedIncomes: ComputedIncome[]) => {
-    try {
-      // Update index for all items based on their new positions using bulkUpdate
-      await db.incomes.bulkUpdate(
-        reorderedIncomes.map((income, newIndex) => ({
-          key: income.id,
-          changes: { index: newIndex }
-        }))
-      );
-    } catch (error) {
-      console.error("Error reordering incomes:", error);
-      alert("Erro ao reordenar rendas");
-    }
-  };
+  }, [setTheme, isDark]);
 
   return (
     <Box
@@ -99,12 +41,13 @@ export default function App() {
       }}
     >
       <Header>
+        {(isLoading || isLoadingAction) && <Spinner />}
         <Button
-          onClick={() => exportToCSV(computedIncomes)}
-          disabled={computedIncomes.length === 0}
+          onClick={() => exportToCSV(incomes)}
+          disabled={incomes.length === 0}
           variant="surface"
           style={{
-            cursor: computedIncomes.length === 0 ? "not-allowed" : "pointer"
+            cursor: incomes.length === 0 ? "not-allowed" : "pointer"
           }}
         >
           <DownloadIcon /> Exportar
@@ -115,27 +58,16 @@ export default function App() {
       <Container size="4">
         <Box p="4" pb="6" style={{ paddingTop: "100px" }}>
           <Flex direction="column" gap="6">
-            {computedIncomes.length > 0 && (
-              <IncomeTable
-                incomes={computedIncomes}
-                onAdd={handleAddIncome}
-                onDelete={handleDeleteIncome}
-                onUpdate={handleUpdateIncome}
-                onReorder={handleReorderIncomes}
-              />
-            )}
+            {!isLoading && incomes.length > 0 && <IncomeTable />}
 
-            {computedIncomes.length === 0 && (
+            {!isLoading && incomes.length === 0 && (
               <Card>
                 <Box p="4">
                   <Heading size="4" mb="4">
                     Adicionar Renda
                   </Heading>
-                  <IncomeForm
-                    onSubmit={handleAddIncome}
-                    isLoading={isLoading}
-                    isEditing={false}
-                  />
+
+                  <IncomeForm />
                 </Box>
               </Card>
             )}

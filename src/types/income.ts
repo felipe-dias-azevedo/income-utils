@@ -6,6 +6,7 @@ export const JornadaType = {
 
 export type JornadaType = (typeof JornadaType)[keyof typeof JornadaType];
 
+// TODO: translate to english
 export interface IncomeEntry {
   id?: number;
   name: string; // Name for the income entry (max 12 characters)

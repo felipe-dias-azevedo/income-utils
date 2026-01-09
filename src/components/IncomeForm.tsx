@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Box, Button, Flex, TextField, Select } from "@radix-ui/themes";
 import type { IncomeEntry } from "../types/income";
 import { JornadaType } from "../types/income";
@@ -9,6 +9,7 @@ import {
   parseCurrencyString
 } from "../utils/formatting";
 import { useAlertDialog } from "./AlertDialogContext";
+import { useIncomeContext } from "../contexts/IncomeContext";
 
 const RADIX_COLORS = [
   "transparent",
@@ -41,9 +42,9 @@ const COLOR_NAMES_PT: Record<(typeof RADIX_COLORS)[number], string> = {
 };
 
 interface IncomeFormProps {
-  onSubmit: (entry: IncomeEntry) => void;
-  isLoading?: boolean;
+  onSubmit?: (entry: IncomeEntry) => void;
   initialData?: {
+    id: number;
     name: string;
     description?: string;
     salarioMensal: number;
@@ -53,15 +54,28 @@ interface IncomeFormProps {
     color?: string;
     index: number;
   };
-  isEditing?: boolean;
 }
 
-export function IncomeForm({
-  onSubmit,
-  isLoading = false,
-  initialData,
-  isEditing = false
-}: IncomeFormProps) {
+export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
+  const isEditing = useMemo(() => initialData !== undefined, [initialData]);
+
+  const {
+    actions: { isLoadingAction: isLoading, add, update }
+  } = useIncomeContext();
+
+  const { alert } = useAlertDialog();
+
+  const onAdd = async (entry: IncomeEntry) => {
+    await add(entry, () => {
+      alert("Erro ao adicionar renda");
+    });
+  };
+  const onUpdate = async (id: number, entry: IncomeEntry) => {
+    await update(id, entry, () => {
+      alert("Erro ao atualizar renda");
+    });
+  };
+
   const [name, setName] = useState(initialData?.name || "");
   const [description, setDescription] = useState(
     initialData?.description || ""
@@ -79,7 +93,6 @@ export function IncomeForm({
     (initialData?.jornada as JornadaType) || JornadaType.FORTY_HOURS
   );
   const [color, setColor] = useState(initialData?.color || "transparent");
-  const { alert } = useAlertDialog();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,7 +119,13 @@ export function IncomeForm({
       index: initialData?.index || 0
     };
 
-    onSubmit(entry);
+    if (isEditing && initialData) {
+      onUpdate(initialData.id, entry);
+    } else {
+      onAdd(entry);
+    }
+
+    onSubmit?.(entry);
 
     // Reset form
     setName("");

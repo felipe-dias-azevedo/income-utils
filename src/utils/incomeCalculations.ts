@@ -18,6 +18,7 @@ function calculateINSS(bruto: number): number {
 
 // Calculate IR (Income Tax) based on Brazilian tax brackets
 function calculateIR(baseIR: number): number {
+  // TODO: update for 2026 tax data
   if (baseIR <= 2428.8) {
     return 0;
   } else if (baseIR <= 2826.65) {
@@ -46,6 +47,7 @@ function calculateBonusIR(bonusAnual: number): number {
   }
 }
 
+// TODO: refactor
 export function computeIncome(entry: IncomeEntry): ComputedIncome {
   const salarioMensal = entry.salarioMensal;
   const bonusAmountAnual = salarioMensal * entry.bonusMultiplier; // Annual bonus

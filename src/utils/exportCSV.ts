@@ -3,6 +3,7 @@ import type { ComputedIncome } from "../types/income";
 
 export function exportToCSV(incomes: ComputedIncome[]): void {
   // Map field names to display labels
+  // TODO: USE keyof ComputedIncome
   const fieldLabelMap: Record<string, string> = {
     id: "ID",
     name: "Nome",

@@ -24,18 +24,12 @@ import {
   Cross2Icon,
   DotsHorizontalIcon
 } from "@radix-ui/react-icons";
-import type { ComputedIncome, IncomeEntry } from "../types/income";
+import type { ComputedIncome } from "../types/income";
 import { formatCurrencySymbol } from "../utils/formatting";
 import { IncomeForm } from "./IncomeForm";
 import "../styles/table-animations.css";
-
-interface IncomeTableProps {
-  incomes: ComputedIncome[];
-  onAdd: (entry: IncomeEntry) => void;
-  onDelete: (id: number) => void;
-  onUpdate: (id: number, entry: IncomeEntry) => void;
-  onReorder?: (incomes: ComputedIncome[]) => void;
-}
+import { useIncomeContext } from "../contexts/IncomeContext";
+import { useAlertDialog } from "./AlertDialogContext";
 
 type ViewType = "hora" | "mensal" | "anual";
 type GrossType = "gross" | "net";
@@ -102,13 +96,28 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
   ]
 };
 
-export function IncomeTable({
-  incomes,
-  onAdd,
-  onDelete,
-  onUpdate,
-  onReorder
-}: IncomeTableProps) {
+export function IncomeTable() {
+  const {
+    incomes,
+    actions: { deleteById, reorder }
+  } = useIncomeContext();
+
+  const { alert, confirm } = useAlertDialog();
+
+  const onDelete = async (id: number) => {
+    if (await confirm("Tem certeza que deseja remover esta renda?")) {
+      await deleteById(id, () => {
+        alert("Erro ao remover renda");
+      });
+    }
+  };
+
+  const onReorder = async (reorderedIncomes: ComputedIncome[]) => {
+    await reorder(reorderedIncomes, () => {
+      alert("Erro ao reordenar rendas");
+    });
+  };
+
   const [grossType, setGrossType] = useState<GrossType>("gross");
   const [viewType, setViewType] = useState<ViewType>("mensal");
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -117,9 +126,11 @@ export function IncomeTable({
   const [compareBaseId, setCompareBaseId] = useState<number | null>(null);
   const [popoverOpenId, setPopoverOpenId] = useState<number | null>(null);
   const [openedAddIncome, setOpenedAddIncome] = useState(false);
-  const editingIncome = editingId
-    ? incomes.find((i) => i.id === editingId)
-    : null;
+
+  const editingIncome = useMemo(
+    () => (editingId ? incomes.find((i) => i.id === editingId) : null),
+    [editingId, incomes]
+  );
 
   const showLiquido = useMemo(() => grossType === "net", [grossType]);
 
@@ -584,12 +595,7 @@ export function IncomeTable({
             <Box p="4">
               <IncomeForm
                 initialData={{ ...editingIncome }}
-                onSubmit={(entry) => {
-                  onUpdate(editingId, entry);
-                  setEditingId(null);
-                }}
-                isLoading={false}
-                isEditing={true}
+                onSubmit={() => setEditingId(null)}
               />
             </Box>
           </Dialog.Content>
@@ -614,7 +620,7 @@ export function IncomeTable({
           </Flex>
 
           <Box p="4">
-            <IncomeForm onSubmit={onAdd} isLoading={false} isEditing={false} />
+            <IncomeForm />
           </Box>
         </Dialog.Content>
       </Dialog.Root>
