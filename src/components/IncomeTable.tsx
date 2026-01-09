@@ -25,7 +25,7 @@ import {
   DotsHorizontalIcon
 } from "@radix-ui/react-icons";
 import type { ComputedIncome, IncomeEntry } from "../types/income";
-import { formatCurrencySimple } from "../utils/formatting";
+import { formatCurrencySymbol } from "../utils/formatting";
 import { IncomeForm } from "./IncomeForm";
 import "../styles/table-animations.css";
 
@@ -41,59 +41,63 @@ type ViewType = "hora" | "mensal" | "anual";
 type GrossType = "gross" | "net";
 
 interface ColumnConfig {
-  key: string;
+  key: keyof ComputedIncome | "drag_handle";
   label: string;
   bold?: boolean;
   isDragHandle?: boolean;
-  liquidoField?: string;
+  liquidoKey?: keyof ComputedIncome;
 }
 
 const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
   hora: [
     { key: "drag_handle", label: "", isDragHandle: true },
     { key: "jornada", label: "Jornada" },
-    { key: "hora", label: "Salário/Hora", liquidoField: "hora_liquido" },
     {
-      key: "hora_anual_outros",
+      key: "salarioHora",
+      label: "Salário/Hora",
+      liquidoKey: "salarioHoraLiquido"
+    },
+    {
+      key: "salarioHoraAnualOutros",
       label: "Total/Hora",
       bold: true,
-      liquidoField: "hora_anual_outros_liquido"
+      liquidoKey: "salarioHoraAnualOutrosLiquido"
     }
   ],
   mensal: [
     { key: "drag_handle", label: "", isDragHandle: true },
     {
-      key: "salario_mensal",
+      key: "salarioMensal",
       label: "Salário/Mês",
-      liquidoField: "salario_mensal_liquido"
+      liquidoKey: "salarioLiquido"
     },
     { key: "outros", label: "Benefícios" },
     {
-      key: "total_mes_outros",
+      key: "totalPerMonthPlusOthers",
       label: "Total/Mês",
       bold: true,
-      liquidoField: "total_mes_outros_liquido"
+      liquidoKey: "totalMesLiquido"
     }
   ],
   anual: [
     { key: "drag_handle", label: "", isDragHandle: true },
     {
-      key: "salario_anual",
+      key: "salarioAnual",
       label: "Salário/Ano",
-      liquidoField: "salario_anual_liquido"
+      liquidoKey: "salarioAnualLiquido"
     },
-    { key: "bonus_anual", label: "PLR", liquidoField: "bonus_liquido" },
+    { key: "bonusAmount", label: "PLR", liquidoKey: "bonusLiquido" },
     {
-      key: "total_ano",
+      key: "totalPerYear",
       label: "Salário + PLR",
-      liquidoField: "total_ano_liquido"
+      liquidoKey: "totalAnoLiquido"
     },
-    { key: "outros_anual", label: "Benefícios/Ano" },
+    { key: "outrosAnual", label: "Benefícios/Ano" },
     {
-      key: "total_ano_outros",
+      key: "totalPerYearPlusOthers",
       label: "Total/Ano",
       bold: true,
-      liquidoField: "total_ano_outros_liquido"
+      liquidoKey: "totalAnoOutrosLiquido"
     }
   ]
 };
@@ -124,74 +128,21 @@ export function IncomeTable({
     columnKey: string,
     column?: ColumnConfig
   ) => {
-    const formatValue = (value: number) => "R$ " + formatCurrencySimple(value);
+    // Determine which property key to use based on gross/net mode
+    const propertyKey =
+      showLiquido && column?.liquidoKey
+        ? column.liquidoKey
+        : (columnKey as keyof ComputedIncome);
 
-    // If showLiquido is enabled and column has liquidoField, use the liquido field
-    if (showLiquido && column?.liquidoField) {
-      const liquidoKey = column.liquidoField;
-      switch (liquidoKey) {
-        case "hora_liquido":
-          return formatValue(income.salarioHoraLiquido);
-        case "hora_anual_outros_liquido":
-          return formatValue(income.salarioHoraAnualMinusBonusOutrosLiquido);
-        case "salario_mensal_liquido":
-          return formatValue(income.salarioLiquido);
-        case "total_mes_outros_liquido":
-          return formatValue(income.totalMesLiquido);
-        case "salario_anual_liquido":
-          return formatValue(income.salarioAnualLiquido);
-        case "bonus_liquido":
-          return formatValue(income.bonusLiquido);
-        case "total_ano_liquido":
-          return formatValue(income.totalAnoLiquido);
-        case "total_ano_outros_liquido":
-          return formatValue(income.totalAnoOutrosLiquido);
-        default:
-          break;
-      }
+    // Get the value directly from the income object
+    const value = income[propertyKey];
+
+    // Format numbers, return other types as-is
+    if (typeof value === "number") {
+      return formatCurrencySymbol(value);
     }
 
-    // Default behavior for non-liquido fields
-    switch (columnKey) {
-      case "jornada":
-        return income.jornada;
-      case "hora":
-        return formatValue(income.salarioHora);
-      case "hora_anual":
-        return formatValue(income.salarioHoraAnual);
-      case "hora_anual_outros":
-        return formatValue(income.salarioHoraAnualOutros);
-      case "salario_mensal":
-        return formatValue(income.salarioMensal);
-      case "salario_anual":
-        return formatValue(income.salarioAnual);
-      case "bonus":
-        return formatValue(income.bonusAmount);
-      case "bonus_liquido":
-        return formatValue(income.bonusLiquido);
-      case "bonus_anual":
-        return formatValue(income.bonusAmount);
-      case "total_ano":
-        return formatValue(income.totalPerYear);
-      case "total_mes":
-        return formatValue(income.totalPerMonth);
-      case "outros":
-        return formatValue(income.outros);
-      case "outros_anual":
-        return formatValue(income.outrosAnual);
-      case "total_mes_outros":
-        return formatValue(income.totalPerMonthPlusOthers);
-      case "total_ano_outros":
-        return formatValue(income.totalPerYearPlusOthers);
-      case "salario_liquido":
-        return formatValue(income.salarioLiquido);
-      case "total_mes_liquido":
-        return formatValue(income.totalMesLiquido);
-      case "total_ano_liquido":
-        return formatValue(income.totalAnoLiquido);
-      default:
-        return "";
-    }
+    return value ?? "";
   };
 
   const handleDragStart = (e: React.DragEvent<HTMLElement>, id: number) => {
@@ -250,9 +201,9 @@ export function IncomeTable({
 
   const columns = VIEW_CONFIGS[viewType];
 
-  const getBoldColumnKey = (): string => {
+  const getBoldColumnKey = (): keyof ComputedIncome => {
     const boldColumn = VIEW_CONFIGS[viewType].find((col) => col.bold);
-    return boldColumn?.key || "";
+    return boldColumn?.key as keyof ComputedIncome;
   };
 
   const compareBase = useMemo(() => {
@@ -467,8 +418,7 @@ export function IncomeTable({
                                       Salário Mensal:{" "}
                                     </Text>
                                     <Text size="1">
-                                      R${" "}
-                                      {formatCurrencySimple(
+                                      {formatCurrencySymbol(
                                         income.salarioMensal
                                       )}
                                     </Text>
@@ -489,7 +439,7 @@ export function IncomeTable({
                                       Benefícios:{" "}
                                     </Text>
                                     <Text size="1">
-                                      R$ {formatCurrencySimple(income.outros)}
+                                      {formatCurrencySymbol(income.outros)}
                                     </Text>
                                   </Box>
                                   <Box>
@@ -504,28 +454,27 @@ export function IncomeTable({
                           </Popover.Root>
                         </Flex>
                       </Table.Cell>
-                      {columns.map(
-                        ({ key, bold, isDragHandle, liquidoField }) =>
-                          isDragHandle ? null : (
-                            <Table.Cell
-                              key={
-                                liquidoField === undefined
-                                  ? `${income.id}-${key}`
-                                  : `${income.id}-${key}-${showLiquido}`
-                              }
-                              style={{
-                                minWidth: "140px",
-                                fontWeight: bold === true ? "bold" : "normal"
-                              }}
-                              className="table-cell-animated"
-                            >
-                              {getCellValue(
-                                income,
-                                key,
-                                columns.find((col) => col.key === key)
-                              )}
-                            </Table.Cell>
-                          )
+                      {columns.map(({ key, bold, isDragHandle, liquidoKey }) =>
+                        isDragHandle ? null : (
+                          <Table.Cell
+                            key={
+                              liquidoKey === undefined
+                                ? `${income.id}-${key}`
+                                : `${income.id}-${key}-${showLiquido}`
+                            }
+                            style={{
+                              minWidth: "140px",
+                              fontWeight: bold === true ? "bold" : "normal"
+                            }}
+                            className="table-cell-animated"
+                          >
+                            {getCellValue(
+                              income,
+                              key,
+                              columns.find((col) => col.key === key)
+                            )}
+                          </Table.Cell>
+                        )
                       )}
                       <Table.Cell
                         key={`${income.id}-compare-${showLiquido}-${viewType}`}
@@ -534,9 +483,6 @@ export function IncomeTable({
                       >
                         {(() => {
                           const boldKey = getBoldColumnKey();
-                          const boldColumn = VIEW_CONFIGS[viewType].find(
-                            (col) => col.bold
-                          );
                           if (
                             !compareBase ||
                             !boldKey ||
@@ -544,25 +490,11 @@ export function IncomeTable({
                           ) {
                             return <Text size="2">—</Text>;
                           }
-                          const currentValue = getCellValue(
-                            income,
-                            boldKey,
-                            boldColumn
-                          );
-                          const baseValue = getCellValue(
-                            compareBase,
-                            boldKey,
-                            boldColumn
-                          );
-                          const currentNumeric = parseFloat(
-                            currentValue.replace("R$ ", "").replace(".", "")
-                          );
-                          const baseNumeric = parseFloat(
-                            baseValue.replace("R$ ", "").replace(".", "")
-                          );
+                          const currentValue = income[boldKey] as number;
+                          const baseValue = compareBase[boldKey] as number;
                           const percentage = calculatePercentageDifference(
-                            currentNumeric,
-                            baseNumeric
+                            currentValue,
+                            baseValue
                           );
                           return (
                             <Text

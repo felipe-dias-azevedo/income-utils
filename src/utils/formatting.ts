@@ -14,6 +14,15 @@ export function formatCurrencySimple(value: number): string {
   });
 }
 
+export function formatCurrencySymbol(value: number): string {
+  return value.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    currency: "BRL",
+    style: "currency"
+  });
+}
+
 export function parseCurrencyString(value: string): number {
   // Remove currency symbol and convert to number
   const cleaned = value
