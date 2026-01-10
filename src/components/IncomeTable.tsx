@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Box,
   Flex,
@@ -210,12 +210,14 @@ export function IncomeTable() {
     return "transparent";
   };
 
-  const columns = VIEW_CONFIGS[viewType];
+  const columns = useMemo(() => VIEW_CONFIGS[viewType], [viewType]);
 
-  const getBoldColumnKey = (): keyof ComputedIncome => {
+  const getComparableColumnKey = useCallback((): keyof ComputedIncome => {
     const boldColumn = VIEW_CONFIGS[viewType].find((col) => col.bold);
-    return boldColumn?.key as keyof ComputedIncome;
-  };
+    return (
+      grossType === "gross" ? boldColumn?.key : boldColumn?.liquidoKey
+    ) as keyof ComputedIncome;
+  }, [viewType, grossType]);
 
   const compareBase = useMemo(() => {
     if (compareBaseId !== null) {
@@ -493,7 +495,7 @@ export function IncomeTable() {
                         className="table-cell-animated"
                       >
                         {(() => {
-                          const boldKey = getBoldColumnKey();
+                          const boldKey = getComparableColumnKey();
                           if (
                             !compareBase ||
                             !boldKey ||
