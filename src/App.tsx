@@ -40,23 +40,25 @@ export default function App() {
         transition: "background-color 0.3s ease"
       }}
     >
-      <Header>
-        {(isLoading || isLoadingAction) && <Spinner />}
-        <Button
-          onClick={() => exportToCSV(incomes)}
-          disabled={incomes.length === 0}
-          variant="surface"
-          style={{
-            cursor: incomes.length === 0 ? "not-allowed" : "pointer"
-          }}
-        >
-          <DownloadIcon /> Exportar
-        </Button>
-        <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
-      </Header>
+      <Container size="4" px="4" pt="4">
+        <Header>
+          {(isLoading || isLoadingAction) && <Spinner />}
+          {theme}
+          <Button
+            onClick={() => exportToCSV(incomes)}
+            disabled={incomes.length === 0}
+            variant="surface"
+            style={{
+              cursor: incomes.length === 0 ? "not-allowed" : "pointer"
+            }}
+          >
+            <DownloadIcon /> Exportar
+          </Button>
+          <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+        </Header>
 
-      <Container size="4">
-        <Box p="4" pb="6" style={{ paddingTop: "100px" }}>
+        {/* <Box p="4" pb="6" style={{ paddingTop: "100px" }}> */}
+        <Box pt="4" pb="6">
           <Flex direction="column" gap="6">
             {!isLoading && incomes.length > 0 && <IncomeTable />}
 
