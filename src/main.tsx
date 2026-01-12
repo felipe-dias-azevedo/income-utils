@@ -13,7 +13,7 @@ import { IncomeProvider } from "./hooks/IncomeProvider.tsx";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <Theme panelBackground="solid" radius="full" accentColor="blue">
+      <Theme panelBackground="translucent" radius="full" accentColor="blue">
         <AlertDialogProvider>
           <IncomeProvider>
             <App />

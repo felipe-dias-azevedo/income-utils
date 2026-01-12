@@ -49,7 +49,7 @@ export function Header({ children }: HeaderProps) {
           <Heading size="5">Utilitários de Renda</Heading>
           <Tooltip content="Regras tributárias atualizadas para 2026">
             <Badge
-              size="3"
+              size="1"
               radius="full"
               variant="soft"
               style={{ userSelect: "none" }}

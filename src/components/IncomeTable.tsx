@@ -31,6 +31,7 @@ import "../styles/table-animations.css";
 import { useIncomeContext } from "../contexts/IncomeContext";
 import { useAlertDialog } from "./AlertDialogContext";
 
+type CompareType = "percentage" | "absolute";
 type ViewType = "hora" | "mensal" | "anual";
 type GrossType = "gross" | "net";
 
@@ -120,6 +121,7 @@ export function IncomeTable() {
 
   const [grossType, setGrossType] = useState<GrossType>("gross");
   const [viewType, setViewType] = useState<ViewType>("mensal");
+  const [compareType, setCompareType] = useState<CompareType>("percentage");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
@@ -277,6 +279,21 @@ export function IncomeTable() {
               </SegmentedControl.Item>
               <SegmentedControl.Item value="anual">Anual</SegmentedControl.Item>
             </SegmentedControl.Root>
+
+            <Separator orientation="vertical" />
+
+            <SegmentedControl.Root
+              value={compareType}
+              onValueChange={(value) => setCompareType(value as CompareType)}
+              className="segmented-colored"
+            >
+              <SegmentedControl.Item value="percentage">
+                Percentual
+              </SegmentedControl.Item>
+              <SegmentedControl.Item value="absolute">
+                Absoluto
+              </SegmentedControl.Item>
+            </SegmentedControl.Root>
           </Flex>
           <Button variant="surface" onClick={() => setOpenedAddIncome(true)}>
             <PlusIcon /> Adicionar
@@ -311,7 +328,7 @@ export function IncomeTable() {
                   )
                 )}
                 <Table.ColumnHeaderCell
-                  style={{ minWidth: "120px", maxWidth: "120px" }}
+                  style={{ minWidth: "140px", maxWidth: "140px" }}
                 >
                   Comparação
                 </Table.ColumnHeaderCell>
@@ -490,8 +507,8 @@ export function IncomeTable() {
                         )
                       )}
                       <Table.Cell
-                        key={`${income.id}-compare-${showLiquido}-${viewType}`}
-                        style={{ minWidth: "120px", maxWidth: "120px" }}
+                        key={`${income.id}-compare-${showLiquido}-${viewType}-${compareType}`}
+                        style={{ minWidth: "140px", maxWidth: "140px" }}
                         className="table-cell-animated"
                       >
                         {(() => {
@@ -505,6 +522,26 @@ export function IncomeTable() {
                           }
                           const currentValue = income[boldKey] as number;
                           const baseValue = compareBase[boldKey] as number;
+                          if (compareType === "absolute") {
+                            const difference = currentValue - baseValue;
+                            const sign = difference > 0 ? "+" : "";
+                            return (
+                              <Text
+                                size="2"
+                                weight="bold"
+                                color={
+                                  difference > 0
+                                    ? "green"
+                                    : difference < 0
+                                    ? "red"
+                                    : "gray"
+                                }
+                              >
+                                {sign}
+                                {formatCurrencySymbol(difference)}
+                              </Text>
+                            );
+                          }
                           const percentage = calculatePercentageDifference(
                             currentValue,
                             baseValue
