@@ -1,15 +1,23 @@
 import { IconButton } from "@radix-ui/themes";
 import { MoonIcon, SunIcon } from "@radix-ui/react-icons";
+import { useTheme } from "next-themes";
+import { useCallback, useMemo } from "react";
 
-interface ThemeToggleProps {
-  isDark: boolean;
-  onToggle: () => void;
-}
+export function ThemeToggle() {
+  const { theme, systemTheme, setTheme } = useTheme();
 
-export function ThemeToggle({ isDark, onToggle }: ThemeToggleProps) {
+  const isDark = useMemo(
+    () => (theme === "system" ? systemTheme === "dark" : theme === "dark"),
+    [theme, systemTheme]
+  );
+
+  const toggleTheme = useCallback(() => {
+    setTheme(isDark ? "light" : "dark");
+  }, [setTheme, isDark]);
+
   return (
     <IconButton
-      onClick={onToggle}
+      onClick={toggleTheme}
       variant="surface"
       title={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
     >

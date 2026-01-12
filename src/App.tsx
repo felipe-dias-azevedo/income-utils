@@ -11,25 +11,16 @@ import { IncomeForm } from "./components/IncomeForm";
 import { IncomeTable } from "./components/IncomeTable";
 import { Header } from "./components/Header";
 import { ThemeToggle } from "./components/ThemeToggle";
-import { useTheme } from "next-themes";
 import { exportToCSV } from "./utils/exportCSV";
 import { DownloadIcon } from "@radix-ui/react-icons";
 import { useIncomeContext } from "./contexts/IncomeContext";
-import { useCallback, useMemo } from "react";
 
 export default function App() {
-  const { theme, setTheme } = useTheme();
   const {
     incomes,
     isLoading,
     actions: { isLoadingAction }
   } = useIncomeContext();
-
-  const isDark = useMemo(() => theme === "dark", [theme]);
-
-  const toggleTheme = useCallback(() => {
-    setTheme(isDark ? "light" : "dark");
-  }, [setTheme, isDark]);
 
   return (
     <Box
@@ -43,7 +34,6 @@ export default function App() {
       <Container size="4" px="4" pt="4">
         <Header>
           {(isLoading || isLoadingAction) && <Spinner />}
-          {theme}
           <Button
             onClick={() => exportToCSV(incomes)}
             disabled={incomes.length === 0}
@@ -54,7 +44,8 @@ export default function App() {
           >
             <DownloadIcon /> Exportar
           </Button>
-          <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+
+          <ThemeToggle />
         </Header>
 
         {/* <Box p="4" pb="6" style={{ paddingTop: "100px" }}> */}
