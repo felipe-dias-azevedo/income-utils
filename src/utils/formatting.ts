@@ -1,5 +1,9 @@
 // Brazilian formatting utilities
 
+function round(value: number, decimals: number): number {
+  return Math.round(value * 10 ** decimals) / 10 ** decimals;
+}
+
 export function formatCurrency(value: number): string {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -39,7 +43,7 @@ export function formatCurrencyInput(value: string): string {
   if (!numeric) return "";
 
   // Convert to number with 2 decimal places
-  const num = parseInt(numeric, 10) / 100;
+  const num = round(parseInt(numeric, 10), 2);
 
   return num.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,

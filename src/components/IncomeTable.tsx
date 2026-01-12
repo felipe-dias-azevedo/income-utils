@@ -47,51 +47,51 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
     { key: "drag_handle", label: "", isDragHandle: true },
     { key: "jornada", label: "Jornada" },
     {
-      key: "salarioHora",
+      key: "grossHour",
       label: "Salário/Hora",
-      liquidoKey: "salarioHoraLiquido"
+      liquidoKey: "netHour"
     },
     {
-      key: "salarioHoraAnualOutros",
+      key: "grossHourPlusBenefits",
       label: "Total/Hora",
       bold: true,
-      liquidoKey: "salarioHoraAnualOutrosLiquido"
+      liquidoKey: "netHourPlusBenefits"
     }
   ],
   mensal: [
     { key: "drag_handle", label: "", isDragHandle: true },
     {
-      key: "salarioMensal",
+      key: "grossMonth",
       label: "Salário/Mês",
-      liquidoKey: "salarioLiquido"
+      liquidoKey: "netMonth"
     },
-    { key: "outros", label: "Benefícios" },
+    { key: "benefits", label: "Benefícios" },
     {
-      key: "totalPerMonthPlusOthers",
+      key: "grossMonthPlusBenefits",
       label: "Total/Mês",
       bold: true,
-      liquidoKey: "totalMesLiquido"
+      liquidoKey: "netMonthPlusBenefits"
     }
   ],
   anual: [
     { key: "drag_handle", label: "", isDragHandle: true },
     {
-      key: "salarioAnual",
+      key: "grossYear",
       label: "Salário/Ano",
-      liquidoKey: "salarioAnualLiquido"
+      liquidoKey: "netYear"
     },
-    { key: "bonusAmount", label: "PLR", liquidoKey: "bonusLiquido" },
+    { key: "grossBonus", label: "PLR", liquidoKey: "netBonus" },
     {
-      key: "totalPerYear",
+      key: "grossYearPlusBonus",
       label: "Salário + PLR",
-      liquidoKey: "totalAnoLiquido"
+      liquidoKey: "netYearPlusBonus"
     },
-    { key: "outrosAnual", label: "Benefícios/Ano" },
+    { key: "benefitsYear", label: "Benefícios/Ano" },
     {
-      key: "totalPerYearPlusOthers",
+      key: "grossYearPlusBonusPlusBenefits",
       label: "Total/Ano",
       bold: true,
-      liquidoKey: "totalAnoOutrosLiquido"
+      liquidoKey: "netYearPlusBonusPlusBenefits"
     }
   ]
 };

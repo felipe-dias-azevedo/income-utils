@@ -16,32 +16,33 @@ export interface IncomeEntry {
   outros: number;
   jornada: JornadaType;
   color?: string; // Radix UI color (e.g., "red", "blue", "transparent")
+  paidMonths: number; // Number of months the salary is paid (e.g., 12 or 13)
   createdAt?: number;
   index: number; // Position in the table for drag-and-drop reordering
 }
 
 export interface ComputedIncome extends IncomeEntry {
   id: number;
-  salarioBruto: number;
-  salarioAnual: number;
-  bonusAmount: number;
-  bonusLiquido: number;
-  outrosAnual: number;
-  totalPerYear: number;
-  totalPerMonth: number;
-  totalPerMonthPlusOthers: number;
-  totalPerYearPlusOthers: number;
-  salarioLiquido: number;
-  totalMesLiquido: number;
-  totalAnoLiquido: number;
-  salarioAnualLiquido: number;
-  totalAnoOutrosLiquido: number;
-  salarioHora: number;
-  salarioHoraAnual: number;
-  salarioHoraAnualOutros: number;
-  salarioHoraLiquido: number;
-  salarioHoraAnualLiquido: number;
-  salarioHoraAnualOutrosLiquido: number;
-  totalPerYearMinusBonusPlusOthers: number;
-  salarioHoraAnualMinusBonusOutrosLiquido: number;
+  workweekHours: number;
+  benefits: number;
+  paidMonths: number;
+  grossMonth: number;
+  grossMonthPlusBenefits: number;
+  inss: number;
+  ir: number;
+  netMonth: number;
+  netMonthPlusBenefits: number;
+  grossYear: number;
+  grossBonus: number;
+  benefitsYear: number;
+  grossYearPlusBonus: number;
+  grossYearPlusBonusPlusBenefits: number;
+  netYear: number;
+  netBonus: number;
+  netYearPlusBonus: number;
+  netYearPlusBonusPlusBenefits: number;
+  grossHour: number;
+  grossHourPlusBenefits: number;
+  netHour: number;
+  netHourPlusBenefits: number;
 }

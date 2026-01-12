@@ -116,6 +116,7 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
       jornada,
       color,
       createdAt: Date.now(),
+      paidMonths: 12,
       index: initialData?.index || 0
     };
 

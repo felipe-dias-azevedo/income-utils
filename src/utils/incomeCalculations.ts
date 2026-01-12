@@ -47,80 +47,84 @@ function calculateBonusIR(bonusAnual: number): number {
   }
 }
 
-// TODO: refactor
+function getWorkweekHours(jornada: JornadaType): number {
+  switch (jornada) {
+    case JornadaType.FORTY_HOURS:
+      return 40;
+    case JornadaType.FORTY_FOUR_HOURS:
+      return 44;
+    case JornadaType.THIRTY_SIX_HOURS:
+      return 36;
+    default:
+      return 40;
+  }
+}
+
+function calculateHourly(value: number, workweekHours: number): number {
+  return value / 52 / 5 / workweekHours;
+}
+
 export function computeIncome(entry: IncomeEntry): ComputedIncome {
-  const salarioMensal = entry.salarioMensal;
-  const bonusAmountAnual = salarioMensal * entry.bonusMultiplier; // Annual bonus
-  const outros = entry.outros;
+  const workweekHours = getWorkweekHours(entry.jornada) / 5;
 
-  // Calculate gross amounts
-  const salarioBruto = salarioMensal;
-  const salarioAnual = salarioMensal * 12;
-  const totalPerYear = salarioAnual + bonusAmountAnual;
-  const totalPerMonth = totalPerYear / 12;
-  const totalPerMonthPlusOthers = salarioMensal + outros;
-  const totalPerYearPlusOthers = totalPerYear + outros * 12;
-  const totalPerYearMinusBonusPlusOthers = salarioAnual + outros * 12;
+  const benefits = entry.outros;
+  const paidMonths = entry.paidMonths ?? 12;
 
-  // Calculate hourly salary: annual salary / 52 weeks / 5 days / (hours per day)
-  const jornadaHours =
-    entry.jornada === JornadaType.FORTY_HOURS
-      ? 40
-      : entry.jornada === JornadaType.FORTY_FOUR_HOURS
-      ? 44
-      : 36;
-  const hoursPerDay = jornadaHours / 5;
-  const salarioHora = salarioAnual / 52 / 5 / hoursPerDay;
-  const salarioHoraAnual = totalPerYear / 52 / 5 / hoursPerDay;
-  const salarioHoraAnualOutros =
-    totalPerYearMinusBonusPlusOthers / 52 / 5 / hoursPerDay;
+  // Monthly
+  const grossMonth = entry.salarioMensal;
+  const grossMonthPlusBenefits = grossMonth + benefits;
+  const inss = calculateINSS(grossMonth);
+  const ir = calculateIR(grossMonth - inss);
+  const netMonth = grossMonth - inss - ir;
+  const netMonthPlusBenefits = netMonth + benefits;
 
-  // Calculate net salary using proper Brazilian tax system
-  const inss = calculateINSS(salarioBruto);
-  const baseIR = salarioBruto - inss;
-  const ir = calculateIR(baseIR);
-  const salarioLiquido = Math.round((salarioBruto - inss - ir) * 100) / 100;
-  const bonusLiquido = bonusAmountAnual - calculateBonusIR(bonusAmountAnual);
+  // Yearly
+  const grossYear = grossMonth * paidMonths;
+  const grossBonus = grossMonth * entry.bonusMultiplier;
+  const benefitsYear = benefits * paidMonths;
+  const grossYearPlusBonus = grossYear + grossBonus;
+  const grossYearPlusBonusPlusBenefits = grossYear + grossBonus + benefitsYear;
+  const netYear = netMonth * paidMonths;
+  const netBonus = grossBonus - calculateBonusIR(grossBonus);
+  const netYearPlusBonus = netYear + netBonus;
+  const netYearPlusBonusPlusBenefits = netYear + netBonus + benefitsYear;
 
-  // Calculate hourly net salary
-  const salarioHoraLiquido = (salarioLiquido * 12) / 52 / 5 / hoursPerDay;
-  const salarioHoraAnualLiquido =
-    (salarioLiquido * 12 + bonusLiquido) / 52 / 5 / hoursPerDay;
-  const salarioHoraAnualOutrosLiquido =
-    (salarioLiquido * 12 + bonusLiquido + outros * 12) / 52 / 5 / hoursPerDay;
-  const salarioHoraAnualMinusBonusOutrosLiquido =
-    (salarioLiquido * 12 + outros * 12) / 52 / 5 / hoursPerDay;
-
-  // Calculate annual net salary
-  const salarioAnualLiquido = salarioLiquido * 12;
-  const totalAnoOutrosLiquido =
-    salarioLiquido * 12 + bonusLiquido + outros * 12;
+  // Hourly
+  const grossHour = calculateHourly(grossYear, workweekHours);
+  const grossHourPlusBenefits = calculateHourly(
+    grossYear + benefitsYear,
+    workweekHours
+  );
+  const netHour = calculateHourly(netYear, workweekHours);
+  const netHourPlusBenefits = calculateHourly(
+    netYear + benefitsYear,
+    workweekHours
+  );
 
   return {
     ...entry,
     id: entry.id || 0,
-    salarioBruto,
-    salarioAnual,
-    bonusAmount: bonusAmountAnual,
-    totalPerYear,
-    totalPerMonth,
-    totalPerMonthPlusOthers,
-    totalPerYearPlusOthers,
-    salarioLiquido,
-    totalMesLiquido: Math.round((salarioLiquido + outros) * 100) / 100,
-    totalAnoLiquido:
-      Math.round((salarioLiquido * 12 + bonusLiquido) * 100) / 100,
-    salarioAnualLiquido: Math.round(salarioAnualLiquido * 100) / 100,
-    totalAnoOutrosLiquido: Math.round(totalAnoOutrosLiquido * 100) / 100,
-    bonusLiquido: Math.round(bonusLiquido * 100) / 100,
-    salarioHora,
-    salarioHoraAnual,
-    salarioHoraAnualOutros,
-    salarioHoraLiquido,
-    salarioHoraAnualLiquido,
-    salarioHoraAnualOutrosLiquido,
-    outrosAnual: outros * 12,
-    totalPerYearMinusBonusPlusOthers,
-    salarioHoraAnualMinusBonusOutrosLiquido
+    workweekHours,
+    benefits,
+    paidMonths,
+    grossMonth,
+    grossMonthPlusBenefits,
+    inss,
+    ir,
+    netMonth,
+    netMonthPlusBenefits,
+    grossYear,
+    grossBonus,
+    benefitsYear,
+    grossYearPlusBonus,
+    grossYearPlusBonusPlusBenefits,
+    netYear,
+    netBonus,
+    netYearPlusBonus,
+    netYearPlusBonusPlusBenefits,
+    grossHour,
+    grossHourPlusBenefits,
+    netHour,
+    netHourPlusBenefits
   };
 }
