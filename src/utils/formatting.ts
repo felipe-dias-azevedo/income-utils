@@ -65,3 +65,26 @@ export function formatPercentageInput(value: string): string {
 
   return numeric;
 }
+
+export const formatDifference = (value: number, decimals = 1) => {
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(decimals)}`;
+};
+
+export const calculatePercentageDifference = (
+  currentValue: number,
+  baseValue: number
+): string => {
+  if (baseValue === 0) return "N/A";
+  const percentage = ((currentValue - baseValue) / baseValue) * 100;
+  const formatted = formatDifference(percentage);
+  return `${formatted}%`;
+};
+
+export const getPercentageColor = (
+  percentage: string
+): "gray" | "green" | "red" => {
+  if (percentage === "N/A") return "gray";
+  if (percentage.includes("+")) return "green";
+  return "red";
+};

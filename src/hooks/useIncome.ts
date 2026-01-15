@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ComputedIncome, IncomeEntry } from "../types/income";
 import { computeIncome } from "../utils/incomeCalculations";
 import type { IncomeContextType } from "../contexts/IncomeContext";
+import { Tax2026 } from "../utils/taxCalculations";
 
 export default function useIncome(): IncomeContextType {
   const [isLoading, setIsLoading] = useState(true);
@@ -14,9 +15,11 @@ export default function useIncome(): IncomeContextType {
     []
   );
 
+  const tax2026 = useMemo(() => new Tax2026(), []);
+
   const incomes: ComputedIncome[] = useMemo(
-    () => (incomeEntries || []).map(computeIncome),
-    [incomeEntries]
+    () => (incomeEntries || []).map((x) => computeIncome(x, tax2026)),
+    [incomeEntries, tax2026]
   );
 
   useEffect(() => {
