@@ -10,6 +10,7 @@ import {
 } from "../utils/formatting";
 import { useAlertDialog } from "./AlertDialogContext";
 import { useIncomeContext } from "../contexts/IncomeContext";
+import NumericInput from "./NumericInput";
 
 const RADIX_COLORS = [
   "transparent",
@@ -171,22 +172,14 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
           </label>
         </Box>
 
-        <Box>
-          <label>
-            <div style={{ marginBottom: "8px", fontSize: "14px" }}>
-              Salário Mensal Bruto *
-            </div>
-            <TextField.Root
-              type="text"
-              placeholder="Ex: R$ 3.000,00"
-              value={salarioMensal}
-              radius="large"
-              onChange={(e) =>
-                setSalarioMensal(formatCurrencyInput(e.target.value))
-              }
-            />
-          </label>
-        </Box>
+        <NumericInput
+          label="Salário Mensal Bruto *"
+          placeholder="Ex: R$ 3.000,00"
+          value={salarioMensal}
+          onChange={(e) =>
+            setSalarioMensal(formatCurrencyInput(e.target.value))
+          }
+        />
 
         <Box>
           <label>
@@ -205,20 +198,12 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
           </label>
         </Box>
 
-        <Box>
-          <label>
-            <div style={{ marginBottom: "8px", fontSize: "14px" }}>
-              Benefícios
-            </div>
-            <TextField.Root
-              type="text"
-              placeholder="Ex: R$ 500,00"
-              value={outros}
-              radius="large"
-              onChange={(e) => setOutros(formatCurrencyInput(e.target.value))}
-            />
-          </label>
-        </Box>
+        <NumericInput
+          label="Benefícios"
+          placeholder="Ex: R$ 500,00"
+          value={outros}
+          onChange={(e) => setOutros(formatCurrencyInput(e.target.value))}
+        />
 
         <Box>
           <label>

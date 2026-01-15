@@ -43,7 +43,9 @@ export function formatCurrencyInput(value: string): string {
 
   return num.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
+    currency: "BRL",
+    style: "currency"
   });
 }
 
