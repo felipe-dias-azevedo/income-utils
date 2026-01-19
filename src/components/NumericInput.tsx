@@ -14,7 +14,7 @@ export default function NumericInput({
   onChange
 }: NumericInputProps) {
   return (
-    <Box>
+    <Box style={{ flex: 1 }}>
       <label>
         <div style={{ marginBottom: "8px", fontSize: "14px" }}>{label}</div>
         <TextField.Root

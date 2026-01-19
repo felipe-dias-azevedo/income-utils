@@ -1,5 +1,13 @@
 import { useMemo, useState } from "react";
-import { Text, Flex, Card, Heading, Box, Strong } from "@radix-ui/themes";
+import {
+  Text,
+  Flex,
+  Card,
+  Heading,
+  Box,
+  Strong,
+  Switch
+} from "@radix-ui/themes";
 import { Tax2025, Tax2026 } from "../utils/taxCalculations";
 import {
   formatCurrency,
@@ -12,19 +20,27 @@ import NumericInput from "./NumericInput";
 
 export function CompareTax() {
   const [gross, setGross] = useState("");
+  const [gross2, setGross2] = useState("");
+  const [doubleCompare, setDoubleCompare] = useState(false);
 
   const tax2025 = useMemo(() => new Tax2025(), []);
   const tax2026 = useMemo(() => new Tax2026(), []);
 
   const grossValue = useMemo(() => parseCurrencyString(gross), [gross]);
+  const gross2Value = useMemo(() => parseCurrencyString(gross2), [gross2]);
 
   const { net2025, net2026 } = useMemo(() => {
     const net2025 = computeMonthlyIncome(grossValue, 0, tax2025);
 
-    const net2026 = computeMonthlyIncome(grossValue, 0, tax2026);
+    let net2026;
+    if (doubleCompare) {
+      net2026 = computeMonthlyIncome(gross2Value, 0, tax2026);
+    } else {
+      net2026 = computeMonthlyIncome(grossValue, 0, tax2026);
+    }
 
     return { net2025, net2026 };
-  }, [grossValue, tax2025, tax2026]);
+  }, [doubleCompare, grossValue, gross2Value, tax2025, tax2026]);
 
   const { compareAbsolute, compareINSS, compareIR } = useMemo(() => {
     return {
@@ -42,19 +58,46 @@ export function CompareTax() {
     <Flex gap="4" direction="column">
       <Card>
         <Flex p="2" gap="4" direction="column">
-          <Box>
-            <Heading size="5">Comparação de Impostos</Heading>
-            <Text size="2">
-              Compare seu salário mensal líquido entre 2025 e 2026.
-            </Text>
-          </Box>
+          <Flex justify="between" gap="4">
+            <Box>
+              <Heading size="5">Comparação de Impostos</Heading>
+              <Text size="2">
+                Compare seu salário mensal líquido entre 2025 e 2026.
+              </Text>
+            </Box>
 
-          <NumericInput
-            label="Salário Mensal Bruto"
-            placeholder="Ex: R$ 3.000,00"
-            value={gross}
-            onChange={(e) => setGross(formatCurrencyInput(e.target.value))}
-          />
+            <Text as="label" size="2">
+              <Flex gap="2">
+                <Switch
+                  checked={doubleCompare}
+                  onCheckedChange={setDoubleCompare}
+                />{" "}
+                {/* TODO: Improve label */}
+                Comparar dois salários
+              </Flex>
+            </Text>
+          </Flex>
+
+          <Flex gap="5">
+            <NumericInput
+              label={
+                doubleCompare
+                  ? "Salário Mensal Bruto 2025"
+                  : "Salário Mensal Bruto"
+              }
+              placeholder="Ex: R$ 3.000,00"
+              value={gross}
+              onChange={(e) => setGross(formatCurrencyInput(e.target.value))}
+            />
+            {doubleCompare && (
+              <NumericInput
+                label="Salário Mensal Bruto 2026"
+                placeholder="Ex: R$ 3.000,00"
+                value={gross2}
+                onChange={(e) => setGross2(formatCurrencyInput(e.target.value))}
+              />
+            )}
+          </Flex>
         </Flex>
       </Card>
 
