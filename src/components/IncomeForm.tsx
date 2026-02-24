@@ -11,6 +11,7 @@ import {
 import { useAlertDialog } from "./AlertDialogContext";
 import { useIncomeContext } from "../contexts/IncomeContext";
 import NumericInput from "./NumericInput";
+import CalculusNumericInput from "./CalculusNumericInput";
 
 const RADIX_COLORS = [
   "transparent",
@@ -172,12 +173,13 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
           </label>
         </Box>
 
-        <NumericInput
+        <CalculusNumericInput
           label="Salário Mensal Bruto *"
           placeholder="Ex: R$ 3.000,00"
           value={salarioMensal}
           onChange={(e) =>
-            setSalarioMensal(formatCurrencyInput(e.target.value))
+            // setSalarioMensal(formatCurrencyInput(e.target.value))
+            setSalarioMensal(e.target.value)
           }
         />
 
@@ -268,8 +270,8 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
                 ? "Atualizando..."
                 : "Adicionando..."
               : isEditing
-              ? "Atualizar"
-              : "Adicionar"}
+                ? "Atualizar"
+                : "Adicionar"}
           </Button>
         </Flex>
       </Flex>
