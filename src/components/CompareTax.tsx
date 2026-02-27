@@ -6,7 +6,8 @@ import {
   Heading,
   Box,
   Strong,
-  Switch
+  Switch,
+  Callout
 } from "@radix-ui/themes";
 import { Tax2025, Tax2026 } from "../utils/taxCalculations";
 import {
@@ -15,13 +16,34 @@ import {
   getPercentageColor,
   parseCurrencyString
 } from "../utils/formatting";
+import {
+  loadStringFromLocalStorage,
+  saveStringToLocalStorage
+} from "../utils/storage";
 import { computeMonthlyIncome } from "../utils/incomeCalculations";
 import NumericInput from "./NumericInput";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
 
 export function CompareTax() {
-  const [gross, setGross] = useState("");
-  const [gross2, setGross2] = useState("");
-  const [doubleCompare, setDoubleCompare] = useState(false);
+  const GROSS_STORAGE = "compare_tax_gross";
+  const GROSS2_STORAGE = "compare_tax_gross2";
+
+  const [gross, setGross] = useState(
+    () => (loadStringFromLocalStorage(GROSS_STORAGE, "") as string) ?? ""
+  );
+  const [gross2, setGross2] = useState(
+    () => (loadStringFromLocalStorage(GROSS2_STORAGE, "") as string) ?? ""
+  );
+  const DOUBLE_COMPARE_STORAGE = "compare_tax_double";
+
+  const [doubleCompare, setDoubleCompare] = useState<boolean>(
+    () => loadStringFromLocalStorage(DOUBLE_COMPARE_STORAGE) === "true"
+  );
+
+  const handleSetDoubleCompare = (next: boolean) => {
+    setDoubleCompare(next);
+    saveStringToLocalStorage(DOUBLE_COMPARE_STORAGE, "" + next);
+  };
 
   const tax2025 = useMemo(() => new Tax2025(), []);
   const tax2026 = useMemo(() => new Tax2026(), []);
@@ -70,7 +92,7 @@ export function CompareTax() {
               <Flex gap="2">
                 <Switch
                   checked={doubleCompare}
-                  onCheckedChange={setDoubleCompare}
+                  onCheckedChange={handleSetDoubleCompare}
                 />{" "}
                 {/* TODO: Improve label */}
                 Comparar dois salários
@@ -87,14 +109,22 @@ export function CompareTax() {
               }
               placeholder="Ex: R$ 3.000,00"
               value={gross}
-              onChange={(e) => setGross(formatCurrencyInput(e.target.value))}
+              onChange={(e) => {
+                const v = formatCurrencyInput(e.target.value);
+                setGross(v);
+                saveStringToLocalStorage(GROSS_STORAGE, v);
+              }}
             />
             {doubleCompare && (
               <NumericInput
                 label="Salário Mensal Bruto 2026"
                 placeholder="Ex: R$ 3.000,00"
                 value={gross2}
-                onChange={(e) => setGross2(formatCurrencyInput(e.target.value))}
+                onChange={(e) => {
+                  const v = formatCurrencyInput(e.target.value);
+                  setGross2(v);
+                  saveStringToLocalStorage(GROSS2_STORAGE, v);
+                }}
               />
             )}
           </Flex>
@@ -173,6 +203,15 @@ export function CompareTax() {
           </Card>
         </Flex>
       )}
+
+      <Callout.Root variant="surface" size="1">
+        <Callout.Icon>
+          <InfoCircledIcon />
+        </Callout.Icon>
+        <Callout.Text>
+          Imposto sobre PLR não foi alterado para 2026
+        </Callout.Text>
+      </Callout.Root>
     </Flex>
   );
 }

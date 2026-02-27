@@ -7,45 +7,52 @@ import {
   Heading,
   Tooltip
 } from "@radix-ui/themes";
+import React from "react";
 import type { ReactNode } from "react";
+
+interface HeaderSectionProps {
+  children?: ReactNode;
+}
+
+function HeaderStart({ children }: HeaderSectionProps) {
+  return <>{children}</>;
+}
+
+function HeaderCenter({ children }: HeaderSectionProps) {
+  return <>{children}</>;
+}
+
+function HeaderEnd({ children }: HeaderSectionProps) {
+  return <>{children}</>;
+}
 
 interface HeaderProps {
   children?: ReactNode;
 }
 
 export function Header({ children }: HeaderProps) {
+  let start: ReactNode = null;
+  let center: ReactNode = null;
+  let end: ReactNode = null;
+
+  React.Children.forEach(children, (child) => {
+    if (React.isValidElement(child)) {
+      if (child.type === HeaderStart) start = child;
+      else if (child.type === HeaderCenter) center = child;
+      else if (child.type === HeaderEnd) end = child;
+    }
+  });
+
   return (
-    // <Box
-    //   style={{
-    //     // position: "fixed",
-    //     // top: 0,
-    //     // left: 0,
-    //     width: "100%",
-    //     // zIndex: 1000,
-    //     display: "flex",
-    //     justifyContent: "center",
-    //     pointerEvents: "none",
-    //   }}
-    // >
-    // <Container size="4" py="4" px="2">
     <Card
       style={{
         pointerEvents: "auto",
         width: "100%",
-        // backdropFilter: "blur(12px)",
-        // WebkitBackdropFilter: "blur(12px)",
-        // backgroundColor:
-        //   "color-mix(in srgb, var(--gray-2) 70%, transparent)",
-        // backgroundColor: "var(--gray-1)",
-        // border: "1px solid var(--gray-3)",
-        // borderRadius: "var(--radius-6)",
-        // padding: "var(--space-3) var(--space-5)",
-        // boxShadow: "var(--shadow-5)",
         transition: "all var(--transition-medium)"
       }}
     >
-      <Flex justify="between" align="center" gap="4" px="1">
-        <Flex align="center" gap="3">
+      <Flex align="center" gap="4" px="1" style={{ width: "100%" }}>
+        <Flex align="center" gap="3" style={{ flex: 1 }}>
           <Heading size="5">Utilitários de Renda</Heading>
           <Tooltip content="Regras tributárias atualizadas para 2026">
             <Badge
@@ -57,14 +64,36 @@ export function Header({ children }: HeaderProps) {
               2026
             </Badge>
           </Tooltip>
+          {start}
         </Flex>
-
-        <Flex gap="3" align="center">
-          {children}
-        </Flex>
+        {center && (
+          <Flex
+            gap="3"
+            align="center"
+            style={{
+              flex: "0 0 auto",
+              justifyContent: "center",
+              alignItems: "center",
+              pointerEvents: "auto"
+            }}
+          >
+            {center}
+          </Flex>
+        )}
+        {end && (
+          <Flex
+            gap="3"
+            align="center"
+            style={{ flex: 1, justifyContent: "flex-end" }}
+          >
+            {end}
+          </Flex>
+        )}
       </Flex>
     </Card>
-    // </Container>
-    // </Box>
   );
 }
+
+Header.Start = HeaderStart;
+Header.Center = HeaderCenter;
+Header.End = HeaderEnd;

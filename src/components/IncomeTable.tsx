@@ -12,7 +12,8 @@ import {
   Separator,
   Button,
   IconButton,
-  DropdownMenu
+  DropdownMenu,
+  Tooltip
 } from "@radix-ui/themes";
 import {
   TrashIcon,
@@ -22,7 +23,8 @@ import {
   SliderIcon,
   PlusIcon,
   Cross2Icon,
-  DotsHorizontalIcon
+  DotsHorizontalIcon,
+  DownloadIcon
 } from "@radix-ui/react-icons";
 import type { ComputedIncome } from "../types/income";
 import { formatCurrencySymbol } from "../utils/formatting";
@@ -30,10 +32,22 @@ import { IncomeForm } from "./IncomeForm";
 import "../styles/table-animations.css";
 import { useIncomeContext } from "../contexts/IncomeContext";
 import { useAlertDialog } from "./AlertDialogContext";
+import { exportToCSV } from "../utils/exportCSV";
+import {
+  loadStringFromLocalStorage,
+  saveStringToLocalStorage,
+  loadNumberFromLocalStorage,
+  saveNumberToLocalStorage
+} from "../utils/storage";
 
 type CompareType = "percentage" | "absolute";
 type ViewType = "hora" | "mensal" | "anual";
 type GrossType = "gross" | "net";
+
+const COMPARE_TYPE_STORAGE = "compare_type";
+const VIEW_TYPE_STORAGE = "view_type";
+const GROSS_TYPE_STORAGE = "gross_type";
+const COMPARE_BASE_STORAGE = "compare_base_id";
 
 interface ColumnConfig {
   key: keyof ComputedIncome | "drag_handle";
@@ -119,13 +133,30 @@ export function IncomeTable() {
     });
   };
 
-  const [grossType, setGrossType] = useState<GrossType>("gross");
-  const [viewType, setViewType] = useState<ViewType>("mensal");
-  const [compareType, setCompareType] = useState<CompareType>("percentage");
+  const [grossType, setGrossType] = useState<GrossType>(
+    () =>
+      (loadStringFromLocalStorage(GROSS_TYPE_STORAGE) as GrossType) ?? "gross"
+  );
+  const [viewType, setViewType] = useState<ViewType>(
+    () =>
+      (loadStringFromLocalStorage(VIEW_TYPE_STORAGE) as ViewType) ?? "mensal"
+  );
+  const [compareType, setCompareType] = useState<CompareType>(
+    () =>
+      (loadStringFromLocalStorage(COMPARE_TYPE_STORAGE) as CompareType) ??
+      "percentage"
+  );
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
-  const [compareBaseId, setCompareBaseId] = useState<number | null>(null);
+  const [compareBaseId, setCompareBaseId] = useState<number | null>(() =>
+    loadNumberFromLocalStorage(COMPARE_BASE_STORAGE)
+  );
+
+  const handleSetCompareBaseId = (id: number | null) => {
+    setCompareBaseId(id);
+    saveNumberToLocalStorage(COMPARE_BASE_STORAGE, id);
+  };
   const [popoverOpenId, setPopoverOpenId] = useState<number | null>(null);
   const [openedAddIncome, setOpenedAddIncome] = useState(false);
 
@@ -259,7 +290,10 @@ export function IncomeTable() {
           <Flex align="center" gap="4">
             <SegmentedControl.Root
               value={grossType}
-              onValueChange={(value) => setGrossType(value as GrossType)}
+              onValueChange={(value) => {
+                setGrossType(value as GrossType);
+                saveStringToLocalStorage(GROSS_TYPE_STORAGE, value);
+              }}
               className="segmented-colored"
             >
               <SegmentedControl.Item value="gross">Bruto</SegmentedControl.Item>
@@ -270,7 +304,10 @@ export function IncomeTable() {
 
             <SegmentedControl.Root
               value={viewType}
-              onValueChange={(value) => setViewType(value as ViewType)}
+              onValueChange={(value) => {
+                setViewType(value as ViewType);
+                saveStringToLocalStorage(VIEW_TYPE_STORAGE, value);
+              }}
               className="segmented-colored"
             >
               <SegmentedControl.Item value="hora">Hora</SegmentedControl.Item>
@@ -284,7 +321,10 @@ export function IncomeTable() {
 
             <SegmentedControl.Root
               value={compareType}
-              onValueChange={(value) => setCompareType(value as CompareType)}
+              onValueChange={(value) => {
+                setCompareType(value as CompareType);
+                saveStringToLocalStorage(COMPARE_TYPE_STORAGE, value);
+              }}
               className="segmented-colored"
             >
               <SegmentedControl.Item value="percentage">
@@ -295,9 +335,27 @@ export function IncomeTable() {
               </SegmentedControl.Item>
             </SegmentedControl.Root>
           </Flex>
-          <Button variant="surface" onClick={() => setOpenedAddIncome(true)}>
-            <PlusIcon /> Adicionar
-          </Button>
+
+          <Flex gap="4">
+            <Tooltip content="Exportar Rendas para arquivo de planilhas">
+              <Button
+                onClick={() => exportToCSV(incomes)}
+                disabled={incomes.length === 0}
+                variant="surface"
+              >
+                <DownloadIcon /> Exportar
+              </Button>
+            </Tooltip>
+
+            <Tooltip content="Adicionar outra Renda a comparação">
+              <Button
+                variant="surface"
+                onClick={() => setOpenedAddIncome(true)}
+              >
+                <PlusIcon /> Adicionar
+              </Button>
+            </Tooltip>
+          </Flex>
         </Flex>
       </Box>
 
@@ -533,8 +591,8 @@ export function IncomeTable() {
                                   difference > 0
                                     ? "green"
                                     : difference < 0
-                                    ? "red"
-                                    : "gray"
+                                      ? "red"
+                                      : "gray"
                                 }
                               >
                                 {sign}
@@ -572,7 +630,9 @@ export function IncomeTable() {
                             </DropdownMenu.Item>
                             {compareBase?.id !== income.id && (
                               <DropdownMenu.Item
-                                onClick={() => setCompareBaseId(income.id)}
+                                onClick={() =>
+                                  handleSetCompareBaseId(income.id)
+                                }
                               >
                                 <SliderIcon /> Comparar com este
                               </DropdownMenu.Item>
@@ -594,7 +654,7 @@ export function IncomeTable() {
                     </ContextMenu.Item>
                     {compareBase?.id !== income.id && (
                       <ContextMenu.Item
-                        onClick={() => setCompareBaseId(income.id)}
+                        onClick={() => handleSetCompareBaseId(income.id)}
                       >
                         <SliderIcon />
                         Comparar com este

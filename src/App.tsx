@@ -5,19 +5,23 @@ import {
   Flex,
   Heading,
   Card,
-  Button,
-  Spinner
+  Spinner,
+  SegmentedControl
 } from "@radix-ui/themes";
 import { IncomeForm } from "./components/IncomeForm";
 import { IncomeTable } from "./components/IncomeTable";
 import { Header } from "./components/Header";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { CompareTax } from "./components/CompareTax";
-import { exportToCSV } from "./utils/exportCSV";
-import { DownloadIcon } from "@radix-ui/react-icons";
+
 import { useIncomeContext } from "./contexts/IncomeContext";
+import {
+  loadStringFromLocalStorage,
+  saveStringToLocalStorage
+} from "./utils/storage";
 
 type Page = "compareIncomes" | "compareTaxes";
+const PAGE_STORAGE = "page";
 
 export default function App() {
   const {
@@ -26,7 +30,9 @@ export default function App() {
     actions: { isLoadingAction }
   } = useIncomeContext();
 
-  const [page, setPage] = useState<Page>("compareIncomes");
+  const [page, setPage] = useState<Page>(
+    () => (loadStringFromLocalStorage(PAGE_STORAGE) as Page) ?? "compareIncomes"
+  );
 
   return (
     <Box
@@ -39,26 +45,28 @@ export default function App() {
     >
       <Container size="4" px="4" pt="4">
         <Header>
-          <Button onClick={() => setPage("compareIncomes")} variant="surface">
-            Comparar Rendas
-          </Button>
-          <Button onClick={() => setPage("compareTaxes")} variant="surface">
-            Comparar Impostos
-          </Button>
-
-          {(isLoading || isLoadingAction) && <Spinner />}
-          <Button
-            onClick={() => exportToCSV(incomes)}
-            disabled={incomes.length === 0}
-            variant="surface"
-            style={{
-              cursor: incomes.length === 0 ? "not-allowed" : "pointer"
-            }}
-          >
-            <DownloadIcon /> Exportar
-          </Button>
-
-          <ThemeToggle />
+          <Header.Start />
+          <Header.Center>
+            <SegmentedControl.Root
+              value={page}
+              onValueChange={(value) => {
+                setPage(value as Page);
+                saveStringToLocalStorage(PAGE_STORAGE, value);
+              }}
+              className="segmented-colored"
+            >
+              <SegmentedControl.Item value="compareIncomes">
+                Comparar Rendas
+              </SegmentedControl.Item>
+              <SegmentedControl.Item value="compareTaxes">
+                Comparar Impostos
+              </SegmentedControl.Item>
+            </SegmentedControl.Root>
+          </Header.Center>
+          <Header.End>
+            {(isLoading || isLoadingAction) && <Spinner />}
+            <ThemeToggle />
+          </Header.End>
         </Header>
 
         {/* <Box p="4" pb="6" style={{ paddingTop: "100px" }}> */}
@@ -70,7 +78,7 @@ export default function App() {
 
                 {!isLoading && incomes.length === 0 && (
                   <Card>
-                    <Box p="4">
+                    <Box p="2">
                       <Heading size="4" mb="4">
                         Adicionar Renda
                       </Heading>
