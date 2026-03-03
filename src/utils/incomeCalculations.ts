@@ -15,6 +15,15 @@ function getWorkweekHours(jornada: JornadaType): number {
   }
 }
 
+function getBonus(entry: IncomeEntry, grossMonth: number) {
+  switch (entry.plrType) {
+    case "fixed":
+      return entry.bonusFixed;
+    case "multiplier":
+      return grossMonth * entry.bonusMultiplier;
+  }
+}
+
 function calculateHourly(value: number, workweekHours: number): number {
   return value / 52 / 5 / workweekHours;
 }
@@ -44,9 +53,9 @@ export function computeIncome(
   entry: IncomeEntry,
   taxCalculator: TaxTableStrategy
 ): ComputedIncome {
-  const workweekHours = getWorkweekHours(entry.jornada) / 5;
+  const workweekHours = getWorkweekHours(entry.workweekHoursType) / 5;
 
-  const benefits = entry.outros;
+  const benefits = entry.benefits;
   const paidMonths = entry.paidMonths ?? 12;
 
   // Monthly
@@ -57,11 +66,11 @@ export function computeIncome(
     ir,
     netMonth,
     netMonthPlusBenefits
-  } = computeMonthlyIncome(entry.salarioMensal, benefits, taxCalculator);
+  } = computeMonthlyIncome(entry.grossMonth, benefits, taxCalculator);
 
   // Yearly
   const grossYear = grossMonth * paidMonths;
-  const grossBonus = grossMonth * entry.bonusMultiplier;
+  const grossBonus = getBonus(entry, grossMonth);
   const benefitsYear = benefits * paidMonths;
   const grossYearPlusBonus = grossYear + grossBonus;
   const grossYearPlusBonusPlusBenefits = grossYear + grossBonus + benefitsYear;

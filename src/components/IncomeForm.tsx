@@ -48,10 +48,12 @@ interface IncomeFormProps {
     id: number;
     name: string;
     description?: string;
-    salarioMensal: number;
-    bonusMultiplier: number;
-    outros: number;
-    jornada: string;
+    grossMonth: number;
+    bonusMultiplier?: number;
+    bonusFixed?: number;
+    plrType: "multiplier" | "fixed";
+    benefits: number;
+    workweekHoursType: string;
     color?: string;
     index: number;
   };
@@ -82,16 +84,35 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
     initialData?.description || ""
   );
   const [salarioMensal, setSalarioMensal] = useState(
-    initialData ? formatCurrencySimple(initialData.salarioMensal) : ""
+    initialData ? formatCurrencySimple(initialData.grossMonth) : ""
+  );
+  // PLR type: 'multiplier' or 'fixed'
+  const [plrType, setPlrType] = useState<"multiplier" | "fixed">(
+    initialData &&
+      typeof initialData.bonusMultiplier === "number" &&
+      initialData.bonusMultiplier !== 0
+      ? "multiplier"
+      : initialData &&
+          initialData.bonusMultiplier === 0 &&
+          initialData.benefits > 0
+        ? "fixed"
+        : "multiplier"
   );
   const [bonusMultiplier, setBonusMultiplier] = useState(
-    initialData ? String(initialData.bonusMultiplier).replace(".", ",") : ""
+    initialData && plrType === "multiplier"
+      ? String(initialData.bonusMultiplier).replace(".", ",")
+      : ""
+  );
+  const [bonusFixed, setBonusFixed] = useState(
+    initialData && plrType === "fixed" && initialData.bonusFixed
+      ? formatCurrencySimple(initialData.bonusFixed)
+      : ""
   );
   const [outros, setOutros] = useState(
-    initialData ? formatCurrencySimple(initialData.outros) : ""
+    initialData ? formatCurrencySimple(initialData.benefits) : ""
   );
   const [jornada, setJornada] = useState<JornadaType>(
-    (initialData?.jornada as JornadaType) || JornadaType.FORTY_HOURS
+    (initialData?.workweekHoursType as JornadaType) || JornadaType.FORTY_HOURS
   );
   const [color, setColor] = useState(initialData?.color || "transparent");
 
@@ -111,10 +132,15 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
     const entry: IncomeEntry = {
       name: name.trim(),
       description: description.trim() || undefined,
-      salarioMensal: parseCurrencyString(salarioMensal),
-      bonusMultiplier: parseFloat(bonusMultiplier.replace(",", ".")) || 0,
-      outros: parseCurrencyString(outros),
-      jornada,
+      grossMonth: parseCurrencyString(salarioMensal),
+      plrType,
+      bonusMultiplier:
+        (plrType === "multiplier" &&
+          parseFloat(bonusMultiplier.replace(",", "."))) ||
+        0,
+      bonusFixed: (plrType === "fixed" && parseCurrencyString(bonusFixed)) || 0,
+      benefits: parseCurrencyString(outros),
+      workweekHoursType: jornada,
       color,
       createdAt: Date.now(),
       paidMonths: 12,
@@ -133,10 +159,12 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
     setName("");
     setDescription("");
     setSalarioMensal("");
-    setBonusMultiplier("0");
+    setBonusMultiplier("");
+    setBonusFixed("");
     setOutros("");
     setJornada(JornadaType.FORTY_HOURS);
     setColor("transparent");
+    setPlrType("multiplier");
   };
 
   return (
@@ -183,18 +211,42 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
 
         <Box>
           <label>
-            <div style={{ marginBottom: "8px", fontSize: "14px" }}>
-              Multiplicador de PLR
-            </div>
-            <TextField.Root
-              type="text"
-              placeholder="Ex: 1,5 (150% do salário mensal)"
-              value={bonusMultiplier}
-              radius="large"
-              onChange={(e) =>
-                setBonusMultiplier(formatPercentageInput(e.target.value))
-              }
-            />
+            <div style={{ marginBottom: "8px", fontSize: "14px" }}>PLR</div>
+            <Flex gap="2" align="center">
+              <Select.Root
+                value={plrType}
+                onValueChange={(v) => setPlrType(v as "multiplier" | "fixed")}
+              >
+                <Select.Trigger />
+                <Select.Content>
+                  <Select.Item value="multiplier">Multiplicador</Select.Item>
+                  <Select.Item value="fixed">Valor Fixo</Select.Item>
+                </Select.Content>
+              </Select.Root>
+              {plrType === "multiplier" ? (
+                <TextField.Root
+                  type="text"
+                  placeholder="Ex: 1,5 (150% do salário mensal)"
+                  value={bonusMultiplier}
+                  radius="large"
+                  onChange={(e) =>
+                    setBonusMultiplier(formatPercentageInput(e.target.value))
+                  }
+                  style={{ width: "100%" }}
+                />
+              ) : (
+                <TextField.Root
+                  type="text"
+                  placeholder="Ex: R$ 2.000,00"
+                  value={bonusFixed}
+                  radius="large"
+                  onChange={(e) =>
+                    setBonusFixed(formatCurrencyInput(e.target.value))
+                  }
+                  style={{ width: "100%" }}
+                />
+              )}
+            </Flex>
           </label>
         </Box>
 
@@ -268,8 +320,8 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
                 ? "Atualizando..."
                 : "Adicionando..."
               : isEditing
-              ? "Atualizar"
-              : "Adicionar"}
+                ? "Atualizar"
+                : "Adicionar"}
           </Button>
         </Flex>
       </Flex>

@@ -60,7 +60,7 @@ interface ColumnConfig {
 const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
   hora: [
     { key: "drag_handle", label: "", isDragHandle: true },
-    { key: "jornada", label: "Jornada" },
+    { key: "workweekHoursType", label: "Jornada" },
     {
       key: "grossHour",
       label: "Salário/Hora",
@@ -149,9 +149,13 @@ export function IncomeTable() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
-  const [compareBaseId, setCompareBaseId] = useState<number | null>(() =>
-    loadNumberFromLocalStorage(COMPARE_BASE_STORAGE)
-  );
+  const [compareBaseId, setCompareBaseId] = useState<number | null>(() => {
+    const savedCompareBaseId = loadNumberFromLocalStorage(COMPARE_BASE_STORAGE);
+
+    return incomes.some((i) => i.id === savedCompareBaseId)
+      ? savedCompareBaseId
+      : null;
+  });
 
   const handleSetCompareBaseId = (id: number | null) => {
     setCompareBaseId(id);
@@ -336,7 +340,7 @@ export function IncomeTable() {
             </SegmentedControl.Root>
           </Flex>
 
-          <Flex gap="4">
+          <Flex gap="4" align="center">
             <Tooltip content="Exportar Rendas para arquivo de planilhas">
               <Button
                 onClick={() => exportToCSV(incomes)}
@@ -379,9 +383,14 @@ export function IncomeTable() {
                   isDragHandle ? null : (
                     <Table.ColumnHeaderCell
                       key={key}
-                      style={{ minWidth: "140px" }}
+                      style={{
+                        minWidth: "140px"
+                      }}
                     >
-                      {label}
+                      <Flex align="center" gap="1">
+                        {label}
+                        {/* {bold && <ComponentInstanceIcon />} */}
+                      </Flex>
                     </Table.ColumnHeaderCell>
                   )
                 )}
@@ -506,20 +515,26 @@ export function IncomeTable() {
                                       Salário Mensal:{" "}
                                     </Text>
                                     <Text size="1">
-                                      {formatCurrencySymbol(
-                                        income.salarioMensal
-                                      )}
+                                      {formatCurrencySymbol(income.grossMonth)}
                                     </Text>
                                   </Box>
                                   <Box>
                                     <Text size="1" weight="bold">
-                                      Multiplicador PLR:{" "}
+                                      {income.plrType === "multiplier" &&
+                                        "Multiplicador de"}{" "}
+                                      PLR:{" "}
                                     </Text>
                                     <Text size="1">
-                                      {income.bonusMultiplier
-                                        .toFixed(2)
-                                        .replace(".", ",")}
-                                      x
+                                      {income.plrType === "multiplier" ? (
+                                        <>
+                                          {income.bonusMultiplier
+                                            .toFixed(2)
+                                            .replace(".", ",")}
+                                          x
+                                        </>
+                                      ) : (
+                                        formatCurrencySymbol(income.bonusFixed)
+                                      )}
                                     </Text>
                                   </Box>
                                   <Box>
@@ -527,14 +542,16 @@ export function IncomeTable() {
                                       Benefícios:{" "}
                                     </Text>
                                     <Text size="1">
-                                      {formatCurrencySymbol(income.outros)}
+                                      {formatCurrencySymbol(income.benefits)}
                                     </Text>
                                   </Box>
                                   <Box>
                                     <Text size="1" weight="bold">
                                       Jornada:{" "}
                                     </Text>
-                                    <Text size="1">{income.jornada}</Text>
+                                    <Text size="1">
+                                      {income.workweekHoursType}
+                                    </Text>
                                   </Box>
                                 </Flex>
                               </Box>

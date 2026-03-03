@@ -6,15 +6,16 @@ export const JornadaType = {
 
 export type JornadaType = (typeof JornadaType)[keyof typeof JornadaType];
 
-// TODO: translate to english
 export interface IncomeEntry {
   id?: number;
   name: string; // Name for the income entry (max 12 characters)
   description?: string; // Optional description (max 30 characters)
-  salarioMensal: number;
+  grossMonth: number;
+  plrType: "multiplier" | "fixed"; // Type of PLR value
   bonusMultiplier: number; // Stored as multiplier (e.g., 1.5 for 150% of salary)
-  outros: number;
-  jornada: JornadaType;
+  bonusFixed: number; // If PLR is a fixed value
+  benefits: number;
+  workweekHoursType: JornadaType;
   color?: string; // Radix UI color (e.g., "red", "blue", "transparent")
   paidMonths: number; // Number of months the salary is paid (e.g., 12 or 13)
   createdAt?: number;
@@ -24,7 +25,6 @@ export interface IncomeEntry {
 export interface ComputedIncome extends IncomeEntry {
   id: number;
   workweekHours: number;
-  benefits: number;
   paidMonths: number;
   grossMonth: number;
   grossMonthPlusBenefits: number;
