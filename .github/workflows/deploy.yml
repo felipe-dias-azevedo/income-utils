@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+environment:
+  name: github-pages
+  url: ${{ steps.deployment.outputs.page_url }}
+
 permissions:
   contents: read
   pages: write
@@ -31,14 +35,12 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Configure git for deployment
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
 
       - name: Deploy to GitHub Pages
+        id: deployment
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: npm run deploy
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/deploy-pages@v4
