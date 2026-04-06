@@ -11,7 +11,6 @@ import {
 import { useAlertDialog } from "./AlertDialogContext";
 import { useIncomeContext } from "../contexts/IncomeContext";
 import NumericLabeledInput from "./NumericLabeledInput";
-import NumericInput from "./NumericInput";
 
 const RADIX_COLORS = [
   "transparent",
@@ -210,10 +209,15 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
           }
         />
 
-        <Box>
-          <label>
-            <div style={{ marginBottom: "8px", fontSize: "14px" }}>PLR</div>
-            <Flex gap="2" align="center">
+        <Flex
+          gap="3"
+          align="center"
+          direction={{ initial: "column", md: "row" }}
+        >
+          <Box width={{ initial: "100%", md: "auto" }}>
+            <label>
+              <div style={{ marginBottom: "8px", fontSize: "14px" }}>PLR</div>
+
               <Select.Root
                 value={plrType}
                 onValueChange={(v) => setPlrType(v as "multiplier" | "fixed")}
@@ -224,28 +228,30 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
                   <Select.Item value="fixed">Valor Fixo</Select.Item>
                 </Select.Content>
               </Select.Root>
-              {plrType === "multiplier" ? (
-                <NumericInput
-                  placeholder="Ex: 1,5 (150% do salário mensal)"
-                  value={bonusMultiplier}
-                  onChange={(e) =>
-                    setBonusMultiplier(formatPercentageInput(e.target.value))
-                  }
-                  style={{ width: "100%" }}
-                />
-              ) : (
-                <NumericInput
-                  placeholder="Ex: R$ 2.000,00"
-                  value={bonusFixed}
-                  onChange={(e) =>
-                    setBonusFixed(formatCurrencyInput(e.target.value))
-                  }
-                  style={{ width: "100%" }}
-                />
-              )}
-            </Flex>
-          </label>
-        </Box>
+            </label>
+          </Box>
+          {plrType === "multiplier" ? (
+            <NumericLabeledInput
+              label="Multiplicador de PLR"
+              placeholder="Ex: 1,5 (150% do salário mensal)"
+              value={bonusMultiplier}
+              onChange={(e) =>
+                setBonusMultiplier(formatPercentageInput(e.target.value))
+              }
+              style={{ width: "100%" }}
+            />
+          ) : (
+            <NumericLabeledInput
+              label="Valor fixo de PLR"
+              placeholder="Ex: R$ 2.000,00"
+              value={bonusFixed}
+              onChange={(e) =>
+                setBonusFixed(formatCurrencyInput(e.target.value))
+              }
+              style={{ width: "100%" }}
+            />
+          )}
+        </Flex>
 
         <NumericLabeledInput
           label="Benefícios"
