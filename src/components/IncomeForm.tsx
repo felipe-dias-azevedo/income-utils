@@ -216,7 +216,9 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
         >
           <Box width={{ initial: "100%", md: "auto" }}>
             <label>
-              <div style={{ marginBottom: "8px", fontSize: "14px" }}>PLR</div>
+              <div style={{ marginBottom: "8px", fontSize: "14px" }}>
+                Tipo de PLR
+              </div>
 
               <Select.Root
                 value={plrType}
