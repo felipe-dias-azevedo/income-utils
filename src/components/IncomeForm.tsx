@@ -10,6 +10,7 @@ import {
 } from "../utils/formatting";
 import { useAlertDialog } from "./AlertDialogContext";
 import { useIncomeContext } from "../contexts/IncomeContext";
+import NumericLabeledInput from "./NumericLabeledInput";
 import NumericInput from "./NumericInput";
 
 const RADIX_COLORS = [
@@ -200,7 +201,7 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
           </label>
         </Box>
 
-        <NumericInput
+        <NumericLabeledInput
           label="Salário Mensal Bruto *"
           placeholder="Ex: R$ 3.000,00"
           value={salarioMensal}
@@ -224,22 +225,18 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
                 </Select.Content>
               </Select.Root>
               {plrType === "multiplier" ? (
-                <TextField.Root
-                  type="text"
+                <NumericInput
                   placeholder="Ex: 1,5 (150% do salário mensal)"
                   value={bonusMultiplier}
-                  radius="large"
                   onChange={(e) =>
                     setBonusMultiplier(formatPercentageInput(e.target.value))
                   }
                   style={{ width: "100%" }}
                 />
               ) : (
-                <TextField.Root
-                  type="text"
+                <NumericInput
                   placeholder="Ex: R$ 2.000,00"
                   value={bonusFixed}
-                  radius="large"
                   onChange={(e) =>
                     setBonusFixed(formatCurrencyInput(e.target.value))
                   }
@@ -250,7 +247,7 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
           </label>
         </Box>
 
-        <NumericInput
+        <NumericLabeledInput
           label="Benefícios"
           placeholder="Ex: R$ 500,00"
           value={outros}

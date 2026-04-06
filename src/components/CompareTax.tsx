@@ -21,7 +21,7 @@ import {
   saveStringToLocalStorage
 } from "../utils/storage";
 import { computeMonthlyIncome } from "../utils/incomeCalculations";
-import NumericInput from "./NumericInput";
+import NumericLabeledInput from "./NumericLabeledInput";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 
 export function CompareTax() {
@@ -101,7 +101,7 @@ export function CompareTax() {
           </Flex>
 
           <Flex gap="5">
-            <NumericInput
+            <NumericLabeledInput
               label={
                 doubleCompare
                   ? "Salário Mensal Bruto 2025"
@@ -116,7 +116,7 @@ export function CompareTax() {
               }}
             />
             {doubleCompare && (
-              <NumericInput
+              <NumericLabeledInput
                 label="Salário Mensal Bruto 2026"
                 placeholder="Ex: R$ 3.000,00"
                 value={gross2}
