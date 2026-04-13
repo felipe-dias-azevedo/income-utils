@@ -7,6 +7,17 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
+export function formatNumber(value: number): string {
+  return value.toLocaleString("pt-BR");
+}
+
+export function formatPercentage(value: number): string {
+  return value.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    style: "percent"
+  });
+}
+
 export function formatCurrencySimple(value: number): string {
   return value.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
@@ -68,19 +79,14 @@ export function formatPercentageInput(value: string): string {
   return numeric;
 }
 
-export const formatDifference = (value: number, decimals = 1) => {
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${value.toFixed(decimals)}`;
-};
-
 export const calculatePercentageDifference = (
   currentValue: number,
   baseValue: number
 ): string => {
   if (baseValue === 0) return "N/A";
-  const percentage = ((currentValue - baseValue) / baseValue) * 100;
-  const formatted = formatDifference(percentage);
-  return `${formatted}%`;
+  const percentage = (currentValue - baseValue) / baseValue;
+  const sign = percentage > 0 ? "+" : "";
+  return `${sign}${formatPercentage(percentage)}`;
 };
 
 export const getPercentageColor = (

@@ -27,7 +27,7 @@ import {
   DownloadIcon
 } from "@radix-ui/react-icons";
 import type { ComputedIncome } from "../types/income";
-import { formatCurrencySymbol } from "../utils/formatting";
+import { formatCurrencySymbol, formatPercentage } from "../utils/formatting";
 import { IncomeForm } from "./IncomeForm";
 import "../styles/table-animations.css";
 import { useIncomeContext } from "../contexts/IncomeContext";
@@ -268,9 +268,9 @@ export function IncomeTable() {
     baseValue: number
   ): string => {
     if (baseValue === 0) return "N/A";
-    const percentage = ((currentValue - baseValue) / baseValue) * 100;
+    const percentage = (currentValue - baseValue) / baseValue;
     const sign = percentage > 0 ? "+" : "";
-    return `${sign}${percentage.toFixed(1)}%`;
+    return `${sign}${formatPercentage(percentage)}`;
   };
 
   const getPercentageColor = (percentage: string): "gray" | "green" | "red" => {
