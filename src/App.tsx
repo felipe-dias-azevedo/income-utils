@@ -6,7 +6,10 @@ import {
   Heading,
   Card,
   Spinner,
-  SegmentedControl
+  SegmentedControl,
+  DropdownMenu,
+  Button,
+  Separator
 } from "@radix-ui/themes";
 import { IncomeForm } from "./components/IncomeForm";
 import { IncomeTable } from "./components/IncomeTable";
@@ -19,8 +22,10 @@ import {
   loadStringFromLocalStorage,
   saveStringToLocalStorage
 } from "./utils/storage";
+import { HamburgerMenuIcon } from "@radix-ui/react-icons";
+import AppUpdatedDate from "./components/AppUpdatedDate";
 
-type Page = "compareIncomes" | "compareTaxes";
+type Page = "compareIncomes" | "compareTaxes" | "compareFinancings";
 const PAGE_STORAGE = "page";
 
 export default function App() {
@@ -47,6 +52,60 @@ export default function App() {
         <Header>
           <Header.Start />
           <Header.Center>
+            <Flex
+              display={{ initial: "flex", sm: "none" }}
+              gap="3"
+              align="center"
+            >
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger>
+                  <Button variant="surface">
+                    <HamburgerMenuIcon />
+                    <DropdownMenu.TriggerIcon />
+                  </Button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content>
+                  <DropdownMenu.Item
+                    onSelect={() => {
+                      setPage("compareIncomes");
+                      saveStringToLocalStorage(PAGE_STORAGE, "compareIncomes");
+                    }}
+                  >
+                    Rendas
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    onSelect={() => {
+                      setPage("compareTaxes");
+                      saveStringToLocalStorage(PAGE_STORAGE, "compareTaxes");
+                    }}
+                  >
+                    Impostos
+                  </DropdownMenu.Item>
+
+                  <DropdownMenu.Separator />
+
+                  <DropdownMenu.Item
+                    onSelect={() => {
+                      setPage("compareFinancings");
+                      saveStringToLocalStorage(
+                        PAGE_STORAGE,
+                        "compareFinancings"
+                      );
+                    }}
+                  >
+                    Financiamentos
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+
+              <AppUpdatedDate />
+            </Flex>
+
+            <Flex
+              gap="3"
+              align="center"
+              display={{ initial: "none", sm: "flex" }}
+            >
             <SegmentedControl.Root
               value={page}
               onValueChange={(value) => {
@@ -56,12 +115,28 @@ export default function App() {
               className="segmented-colored"
             >
               <SegmentedControl.Item value="compareIncomes">
-                Comparar Rendas
+                  Rendas
               </SegmentedControl.Item>
               <SegmentedControl.Item value="compareTaxes">
-                Comparar Impostos
+                  Impostos
+                </SegmentedControl.Item>
+              </SegmentedControl.Root>
+
+              <Separator orientation="vertical" />
+
+              <SegmentedControl.Root
+                value={page}
+                onValueChange={(value) => {
+                  setPage(value as Page);
+                  saveStringToLocalStorage(PAGE_STORAGE, value);
+                }}
+                className="segmented-colored"
+              >
+                <SegmentedControl.Item value="compareFinancings">
+                  Financiamentos
               </SegmentedControl.Item>
             </SegmentedControl.Root>
+            </Flex>
           </Header.Center>
           <Header.End>
             {(isLoading || isLoadingAction) && <Spinner />}
