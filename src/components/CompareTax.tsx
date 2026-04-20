@@ -88,6 +88,7 @@ export function CompareTax() {
               </Text>
             </Box>
 
+            {/* TODO: add responsive design */}
             <Text as="label" size="2">
               <Flex gap="2">
                 <Switch

@@ -13,7 +13,8 @@ import {
   Button,
   IconButton,
   DropdownMenu,
-  Tooltip
+  Tooltip,
+  Select
 } from "@radix-ui/themes";
 import {
   TrashIcon,
@@ -24,7 +25,12 @@ import {
   PlusIcon,
   Cross2Icon,
   DotsHorizontalIcon,
-  DownloadIcon
+  DownloadIcon,
+  ClockIcon,
+  CalendarIcon,
+  ComponentInstanceIcon,
+  ComponentBooleanIcon,
+  BarChartIcon
 } from "@radix-ui/react-icons";
 import type { ComputedIncome } from "../types/income";
 import { formatCurrencySymbol, formatPercentage } from "../utils/formatting";
@@ -109,6 +115,56 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
       liquidoKey: "netYearPlusBonusPlusBenefits"
     }
   ]
+};
+
+interface SelectOption<T> {
+  value: T;
+  label: string;
+  icon: React.ReactNode;
+}
+
+const GROSS_TYPE_OPTIONS: Record<GrossType, SelectOption<GrossType>> = {
+  gross: {
+    value: "gross",
+    label: "Bruto",
+    icon: <ComponentInstanceIcon width="16" height="16" />
+  },
+  net: {
+    value: "net",
+    label: "Líquido",
+    icon: <ComponentBooleanIcon width="16" height="16" />
+  }
+};
+
+const VIEW_TYPE_OPTIONS: Record<ViewType, SelectOption<ViewType>> = {
+  hora: {
+    value: "hora",
+    label: "Hora",
+    icon: <ClockIcon width="16" height="16" />
+  },
+  mensal: {
+    value: "mensal",
+    label: "Mensal",
+    icon: <CalendarIcon width="16" height="16" />
+  },
+  anual: {
+    value: "anual",
+    label: "Anual",
+    icon: <BarChartIcon width="16" height="16" />
+  }
+};
+
+const COMPARE_TYPE_OPTIONS: Record<CompareType, SelectOption<CompareType>> = {
+  percentage: {
+    value: "percentage",
+    label: "Percentual",
+    icon: <span style={{ fontSize: 14, fontWeight: 500 }}>%</span>
+  },
+  absolute: {
+    value: "absolute",
+    label: "Absoluto",
+    icon: <span style={{ fontSize: 14, fontWeight: 500 }}>123</span>
+  }
 };
 
 export function IncomeTable() {
@@ -282,6 +338,7 @@ export function IncomeTable() {
   return (
     <Card style={{ padding: 0 }}>
       <Box>
+        {/* Desktop/Tablet View (md and up) */}
         <Flex
           justify="between"
           align="center"
@@ -290,8 +347,10 @@ export function IncomeTable() {
           px="4"
           overflowX="auto"
           gap="4"
+          display={{ initial: "none", md: "flex" }}
         >
           <Flex align="center" gap="4">
+            {/* TODO: use options on segmented controls too */}
             <SegmentedControl.Root
               value={grossType}
               onValueChange={(value) => {
@@ -359,6 +418,162 @@ export function IncomeTable() {
                 <PlusIcon /> Adicionar
               </Button>
             </Tooltip>
+          </Flex>
+        </Flex>
+
+        {/* Mobile View (xs, sm) */}
+        <Flex
+          justify="between"
+          align="center"
+          mt="4"
+          mb="2"
+          px="4"
+          gap="2"
+          display={{ initial: "flex", md: "none" }}
+          direction="column"
+          style={{ width: "100%" }}
+        >
+          {/* TODO: improve alignment */}
+          <Flex gap="2" style={{ width: "100%" }} wrap="wrap">
+            <Flex
+              direction="column"
+              style={{ flex: 1, minWidth: "100px" }}
+              gap="1"
+            >
+              <Text size="1" weight="medium">
+                Tipo
+              </Text>
+              <Select.Root
+                value={grossType}
+                onValueChange={(value) => {
+                  setGrossType(value as GrossType);
+                  saveStringToLocalStorage(GROSS_TYPE_STORAGE, value);
+                }}
+              >
+                <Select.Trigger />
+                <Select.Content>
+                  <Select.Group>
+                    {Object.values(GROSS_TYPE_OPTIONS).map(
+                      ({ value, label, icon }) => (
+                        <Select.Item key={value} value={value}>
+                          <Flex as="span" align="center" gap="2">
+                            {icon}
+                            {label}
+                          </Flex>
+                        </Select.Item>
+                      )
+                    )}
+                  </Select.Group>
+                </Select.Content>
+              </Select.Root>
+            </Flex>
+
+            <Flex
+              direction="column"
+              style={{ flex: 1, minWidth: "100px" }}
+              gap="1"
+            >
+              <Text size="1" weight="medium">
+                Período
+              </Text>
+              <Select.Root
+                value={viewType}
+                onValueChange={(value) => {
+                  setViewType(value as ViewType);
+                  saveStringToLocalStorage(VIEW_TYPE_STORAGE, value);
+                }}
+              >
+                <Select.Trigger />
+                <Select.Content>
+                  <Select.Group>
+                    {Object.values(VIEW_TYPE_OPTIONS).map(
+                      ({ value, label, icon }) => (
+                        <Select.Item key={value} value={value}>
+                          <Flex as="span" align="center" gap="2">
+                            {icon}
+                            {label}
+                          </Flex>
+                        </Select.Item>
+                      )
+                    )}
+                  </Select.Group>
+                </Select.Content>
+              </Select.Root>
+            </Flex>
+
+            <Flex
+              direction="column"
+              style={{ flex: 1, minWidth: "100px" }}
+              gap="1"
+            >
+              <Text size="1" weight="medium">
+                Comparação
+              </Text>
+              <Select.Root
+                value={compareType}
+                onValueChange={(value) => {
+                  setCompareType(value as CompareType);
+                  saveStringToLocalStorage(COMPARE_TYPE_STORAGE, value);
+                }}
+              >
+                <Select.Trigger />
+                <Select.Content>
+                  <Select.Group>
+                    {Object.values(COMPARE_TYPE_OPTIONS).map(
+                      ({ value, label, icon }) => (
+                        <Select.Item key={value} value={value}>
+                          <Flex as="span" align="center" gap="2">
+                            {icon}
+                            {label}
+                          </Flex>
+                        </Select.Item>
+                      )
+                    )}
+                  </Select.Group>
+                </Select.Content>
+              </Select.Root>
+            </Flex>
+
+            <Tooltip content="Exportar Rendas para arquivo de planilhas">
+              <IconButton
+                variant="surface"
+                onClick={() => exportToCSV(incomes)}
+                disabled={incomes.length === 0}
+              >
+                <DownloadIcon width="18" height="18" />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip content="Adicionar outra Renda a comparação">
+              <IconButton
+                variant="surface"
+                onClick={() => setOpenedAddIncome(true)}
+              >
+                <PlusIcon width="18" height="18" />
+              </IconButton>
+            </Tooltip>
+
+            {/* <DropdownMenu.Root
+              open={mobileMenuOpen}
+              onOpenChange={setMobileMenuOpen}
+            >
+              <DropdownMenu.Trigger>
+                <IconButton variant="surface">
+                  <DotsHorizontalIcon width="18" height="18" />
+                </IconButton>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content>
+                <DropdownMenu.Item
+                  onClick={() => exportToCSV(incomes)}
+                  disabled={incomes.length === 0}
+                >
+                  <DownloadIcon /> Exportar
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => setOpenedAddIncome(true)}>
+                  <PlusIcon /> Adicionar
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root> */}
           </Flex>
         </Flex>
       </Box>

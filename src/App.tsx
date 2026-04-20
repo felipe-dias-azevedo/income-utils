@@ -71,6 +71,7 @@ export default function App() {
                       saveStringToLocalStorage(PAGE_STORAGE, "compareIncomes");
                     }}
                   >
+                    {/* TODO: add icon to item option */}
                     Rendas
                   </DropdownMenu.Item>
                   <DropdownMenu.Item
