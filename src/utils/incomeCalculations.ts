@@ -1,6 +1,7 @@
 import type { ComputedIncome, IncomeEntry } from "../types/income";
 import { JornadaType } from "../types/income";
 import { TaxTableStrategy } from "./taxCalculations";
+import "../extensions/number.extensions";
 
 function getWorkweekHours(jornada: JornadaType): number {
   switch (jornada) {
@@ -28,6 +29,20 @@ function calculateHourly(value: number, workweekHours: number): number {
   return value / 52 / 5 / workweekHours;
 }
 
+export function computeBonus(
+  grossBonus: number,
+  taxCalculator: TaxTableStrategy
+) {
+  const irBonus = taxCalculator.calculateBonusIR(grossBonus);
+  const netBonus = grossBonus - irBonus;
+
+  return {
+    grossBonus,
+    netBonus,
+    irBonus
+  };
+}
+
 export function computeMonthlyIncome(
   grossMonth: number,
   benefits: number,
@@ -35,9 +50,10 @@ export function computeMonthlyIncome(
 ) {
   const grossMonthPlusBenefits = grossMonth + benefits;
   const inss = taxCalculator.calculateINSS(grossMonth);
-  const ir = taxCalculator.calculateIR(grossMonth - inss);
-  const netMonth = grossMonth - inss - ir;
-  const netMonthPlusBenefits = netMonth + benefits;
+  const irDeduction = taxCalculator.getIRDeduction(grossMonth, inss);
+  const ir = taxCalculator.calculateIR(grossMonth - irDeduction, grossMonth);
+  const netMonth = (grossMonth - inss - ir).round();
+  const netMonthPlusBenefits = (netMonth + benefits).round();
 
   return {
     grossMonth,
@@ -75,7 +91,7 @@ export function computeIncome(
   const grossYearPlusBonus = grossYear + grossBonus;
   const grossYearPlusBonusPlusBenefits = grossYear + grossBonus + benefitsYear;
   const netYear = netMonth * paidMonths;
-  const netBonus = grossBonus - taxCalculator.calculateBonusIR(grossBonus);
+  const { netBonus } = computeBonus(grossBonus, taxCalculator);
   const netYearPlusBonus = netYear + netBonus;
   const netYearPlusBonusPlusBenefits = netYear + netBonus + benefitsYear;
 

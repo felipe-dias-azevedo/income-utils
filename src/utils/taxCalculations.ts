@@ -1,3 +1,5 @@
+import "../extensions/number.extensions";
+
 // ===== Base Types =====
 export type ProgressiveBracket = Readonly<{
   /** Upper limit of the bracket (inclusive). Use Infinity for the last bracket */
@@ -19,7 +21,7 @@ export type ProgressiveTaxTable = Readonly<{
 
 export interface TaxBracket {
   calculateINSS(gross: number): number;
-  calculateIR(irBase: number): number;
+  calculateIR(irBase: number, taxableIncome?: number): number;
   calculateBonusIR(annualBonus: number): number;
 }
 
@@ -51,30 +53,38 @@ export function calculateProgressiveTax(
 
 // ===== Tax Calculator Implementation =====
 export class TaxTableStrategy implements TaxBracket {
-  private readonly inssTable: ProgressiveTaxTable;
-  private readonly irTable: ProgressiveTaxTable;
-  private readonly bonusIrTable: ProgressiveTaxTable;
+  protected readonly inssTable: ProgressiveTaxTable;
+  protected readonly irTable: ProgressiveTaxTable;
+  protected readonly bonusIrTable: ProgressiveTaxTable;
+
+  protected readonly simplifiedDeduction: number;
 
   constructor(
     inssTable: ProgressiveTaxTable,
     irTable: ProgressiveTaxTable,
-    bonusIrTable: ProgressiveTaxTable
+    bonusIrTable: ProgressiveTaxTable,
+    simplifiedDeduction: number
   ) {
     this.inssTable = inssTable;
     this.irTable = irTable;
     this.bonusIrTable = bonusIrTable;
+    this.simplifiedDeduction = simplifiedDeduction;
   }
 
   calculateINSS(gross: number): number {
-    return calculateProgressiveTax(gross, this.inssTable);
+    return calculateProgressiveTax(gross, this.inssTable).round();
   }
 
-  calculateIR(irBase: number): number {
-    return calculateProgressiveTax(irBase, this.irTable);
+  calculateIR(irBase: number, _taxableIncome?: number): number {
+    return calculateProgressiveTax(irBase, this.irTable).round();
   }
 
   calculateBonusIR(annualBonus: number): number {
-    return calculateProgressiveTax(annualBonus, this.bonusIrTable);
+    return calculateProgressiveTax(annualBonus, this.bonusIrTable).round();
+  }
+
+  getIRDeduction(_gross: number, inss: number): number {
+    return Math.max(inss, this.simplifiedDeduction);
   }
 }
 
@@ -125,18 +135,28 @@ const INSS_2026: ProgressiveTaxTable = {
   ]
 };
 
+/**
+ * Simplified monthly deduction (25% of R$ 2,428.80).
+ * 2026 keeps the same amount.
+ */
+const SIMPLIFIED_DEDUCTION_2025 = 607.2;
+
 // ===== IRRF Reduction for 2026 =====
 /**
  * Calculates the monthly IRRF reduction for 2026 (Law 15.270/2025).
  * Applies to taxable income up to 7350.
  */
-function calculateIRRFReduction2026(taxableIncome: number): number {
-  if (!Number.isFinite(taxableIncome) || taxableIncome < 0) return 0;
+function calculateIRRFReduction2026(
+  grossIncome: number,
+  taxFromTable: number
+): number {
+  if (!Number.isFinite(grossIncome) || grossIncome < 0) return 0;
 
-  if (taxableIncome <= 5000) return 312.89;
+  if (grossIncome <= 5000) return Math.min(312.89, taxFromTable);
 
-  if (taxableIncome <= 7350) {
-    return Math.max(0, 978.62 - 0.133145 * taxableIncome);
+  if (grossIncome <= 7350) {
+    const reduction = 978.62 - 0.133145 * grossIncome;
+    return Math.min(Math.max(0, reduction), taxFromTable);
   }
 
   return 0;
@@ -146,7 +166,7 @@ function calculateIRRFReduction2026(taxableIncome: number): number {
 /** Tax calculator for 2025 */
 export class Tax2025 extends TaxTableStrategy {
   constructor() {
-    super(INSS_2025, IR_MENSAL, IR_PLR);
+    super(INSS_2025, IR_MENSAL, IR_PLR, SIMPLIFIED_DEDUCTION_2025);
   }
 }
 
@@ -156,17 +176,18 @@ export class Tax2025 extends TaxTableStrategy {
  */
 export class Tax2026 extends TaxTableStrategy {
   constructor() {
-    super(INSS_2026, IR_MENSAL, IR_PLR);
+    super(INSS_2026, IR_MENSAL, IR_PLR, SIMPLIFIED_DEDUCTION_2025);
   }
 
   /**
    * Calculates IR with 2026 reduction applied.
-   * @param irBase - Base for IR calculation
-   * @param taxableIncome - Taxable income for reduction (defaults to irBase)
+   * The reduction thresholds for 2026 follow the rules in Lei 15.270/2025.
+   * @param irBase - Base for IR calculation (gross minus INSS)
+   * @param taxableIncome - Gross Income used for 2026 reduction thresholds
    */
   override calculateIR(irBase: number, taxableIncome: number = irBase): number {
-    const taxFromTable = super.calculateIR(irBase);
-    const reduction = calculateIRRFReduction2026(taxableIncome);
-    return Math.max(0, taxFromTable - reduction);
+    const taxFromTable = calculateProgressiveTax(irBase, this.irTable);
+    const reduction = calculateIRRFReduction2026(taxableIncome, taxFromTable);
+    return Math.max(0, taxFromTable - reduction).round();
   }
 }
