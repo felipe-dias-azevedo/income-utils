@@ -1,25 +1,36 @@
 body {
-  margin: 0;
-  background-color: var(--gray-2);
-  transition: "all var(--transition-medium)";
+    margin: 0;
+    background-color: var(--gray-2);
+    transition: "all var(--transition-medium)";
 }
 
 .bg-gradient {
-  background: linear-gradient(
-    35deg,
-    var(--gray-2),
-    var(--accent-3),
-    var(--gray-2)
-  );
-  transition: "all var(--transition-medium)";
+    background: linear-gradient(
+        35deg,
+        var(--gray-2),
+        var(--accent-3),
+        var(--gray-2)
+    );
+    transition: "all var(--transition-medium)";
 }
 
 .segmented-colored {
-  box-shadow: inset 0 0 0 1px var(--gray-7);
+    box-shadow: inset 0 0 0 1px var(--gray-7);
 }
 
 .segmented-colored [data-state="on"] {
-  box-shadow: inset 0 0 0 2px var(--accent-9);
-  border-radius: var(--radius-6);
-  background-color: var(--gray-2);
+    box-shadow: inset 0 0 0 2px var(--accent-9);
+    border-radius: var(--radius-6);
+    background-color: var(--color-surface);
+}
+
+.checkbox-card {
+    user-select: none;
+}
+
+.checkbox-card:has(button[data-state="checked"]:not(:disabled)) {
+    box-shadow: inset 0 0 0 2px var(--accent-9) !important;
+    background-color: var(--color-surface);
+    --checkbox-cards-item-background-color: transparent;
+    --checkbox-cards-item-border-width: 0px;
 }

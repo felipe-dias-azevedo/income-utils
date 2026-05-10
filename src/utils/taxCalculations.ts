@@ -27,9 +27,11 @@ export interface TaxBracket {
 
 // ===== Utility Functions =====
 export function calculateProgressiveTax(
-  base: number,
+  baseValue: number,
   table: ProgressiveTaxTable
 ): number {
+  const base = Math.max(0, baseValue);
+
   if (!Number.isFinite(base) || base < 0) {
     throw new Error(
       `Base (${table.name}) must be a finite number >= 0. Received: ${base}`

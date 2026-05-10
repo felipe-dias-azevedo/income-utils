@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeMonthlyIncome } from "./incomeCalculations";
+import { computeMonthlyIncome, computeBonus } from "./incomeCalculations";
 import { Tax2025, Tax2026 } from "./taxCalculations";
 
 describe("Tax2026", () => {
@@ -59,6 +59,90 @@ describe("Tax2026", () => {
     expect(result.inss).toBeCloseTo(988.09, 2);
     expect(result.ir).toBeCloseTo(2387.67, 2);
     expect(result.netMonth).toBeCloseTo(9599.24, 2);
+  });
+});
+
+describe("Tax2026 - computeBonus", () => {
+  const tax2026 = new Tax2026();
+
+  it("Bonus below IR threshold (R$ 5.000)", () => {
+    const result = computeBonus(5000, tax2026);
+
+    expect(result.grossBonus).toBe(5000);
+    expect(result.irBonus).toBeCloseTo(0, 2);
+    expect(result.netBonus).toBeCloseTo(5000, 2);
+  });
+
+  it("Bonus at first IR bracket (R$ 8.214,40)", () => {
+    const result = computeBonus(8214.4, tax2026);
+
+    expect(result.grossBonus).toBe(8214.4);
+    expect(result.irBonus).toBeCloseTo(0, 2);
+    expect(result.netBonus).toBeCloseTo(8214.4, 2);
+  });
+
+  it("Bonus just above IR threshold (R$ 8.214,41)", () => {
+    const result = computeBonus(8214.41, tax2026);
+
+    expect(result.grossBonus).toBeCloseTo(8214.41, 2);
+    expect(result.irBonus).toBeCloseTo(0, 2);
+    expect(result.netBonus).toBeCloseTo(8214.41, 2);
+  });
+
+  it("Bonus in second IR bracket (R$ 9.922,28)", () => {
+    const result = computeBonus(9922.28, tax2026);
+
+    expect(result.grossBonus).toBeCloseTo(9922.28, 2);
+    expect(result.irBonus).toBeCloseTo(128.09, 2);
+    expect(result.netBonus).toBeCloseTo(9794.19, 2);
+  });
+
+  it("Bonus in third IR bracket (R$ 13.167,00)", () => {
+    const result = computeBonus(13167, tax2026);
+
+    expect(result.grossBonus).toBe(13167);
+    expect(result.irBonus).toBeCloseTo(614.8, 2);
+    expect(result.netBonus).toBeCloseTo(12552.2, 2);
+  });
+
+  it("Bonus in fourth IR bracket (R$ 16.380,38)", () => {
+    const result = computeBonus(16380.38, tax2026);
+
+    expect(result.grossBonus).toBeCloseTo(16380.38, 2);
+    expect(result.irBonus).toBeCloseTo(1337.81, 2);
+    expect(result.netBonus).toBeCloseTo(15042.57, 2);
+  });
+
+  it("Bonus in highest IR bracket (R$ 30.000)", () => {
+    const result = computeBonus(30000, tax2026);
+
+    expect(result.grossBonus).toBe(30000);
+    expect(result.irBonus).toBeCloseTo(5083.2, 2);
+    expect(result.netBonus).toBeCloseTo(24916.8, 2);
+  });
+
+  it("Large bonus (R$ 50.000)", () => {
+    const result = computeBonus(50000, tax2026);
+
+    expect(result.grossBonus).toBe(50000);
+    expect(result.irBonus).toBeCloseTo(10583.2, 2);
+    expect(result.netBonus).toBeCloseTo(39416.8, 2);
+  });
+
+  it("Small bonus (R$ 100)", () => {
+    const result = computeBonus(100, tax2026);
+
+    expect(result.grossBonus).toBe(100);
+    expect(result.irBonus).toBeCloseTo(0, 2);
+    expect(result.netBonus).toBeCloseTo(100, 2);
+  });
+
+  it("Zero bonus", () => {
+    const result = computeBonus(0, tax2026);
+
+    expect(result.grossBonus).toBe(0);
+    expect(result.irBonus).toBe(0);
+    expect(result.netBonus).toBe(0);
   });
 });
 

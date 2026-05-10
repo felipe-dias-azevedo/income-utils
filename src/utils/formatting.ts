@@ -85,8 +85,9 @@ export const calculatePercentageDifference = (
 ): string => {
   if (baseValue === 0) return "N/A";
   const percentage = (currentValue - baseValue) / baseValue;
-  const sign = percentage > 0 ? "+" : "";
-  return `${sign}${formatPercentage(percentage)}`;
+  const sign = percentage > 0 ? "+" : "−";
+  const percentageAbsolute = Math.abs(percentage);
+  return `${sign}${formatPercentage(percentageAbsolute)}`;
 };
 
 export const getPercentageColor = (

@@ -39,3 +39,26 @@ export function loadNumberFromLocalStorage(
     return defaultValue ?? null;
   }
 }
+
+export function saveStringListToLocalStorage(key: string, value: string[]) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // ignore
+  }
+}
+
+export function loadStringListFromLocalStorage(
+  key: string,
+  defaultValue?: string[]
+) {
+  try {
+    const v = localStorage.getItem(key);
+    if (v === null) return defaultValue ?? [];
+    const parsed = JSON.parse(v);
+    if (!Array.isArray(parsed)) return defaultValue ?? [];
+    return parsed;
+  } catch {
+    return defaultValue ?? [];
+  }
+}
