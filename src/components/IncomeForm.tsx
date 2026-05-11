@@ -202,7 +202,8 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
 
         <NumericLabeledInput
           label="Salário Mensal Bruto *"
-          placeholder="Ex: R$ 3.000,00"
+          prefix="R$"
+          placeholder="Ex: 3.000,00"
           value={salarioMensal}
           onChange={(e) =>
             setSalarioMensal(formatCurrencyInput(e.target.value))
@@ -245,7 +246,8 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
           ) : (
             <NumericLabeledInput
               label="Valor fixo de PLR"
-              placeholder="Ex: R$ 2.000,00"
+              prefix="R$"
+              placeholder="Ex: 2.000,00"
               value={bonusFixed}
               onChange={(e) =>
                 setBonusFixed(formatCurrencyInput(e.target.value))
@@ -257,7 +259,8 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
 
         <NumericLabeledInput
           label="Benefícios"
-          placeholder="Ex: R$ 500,00"
+          prefix="R$"
+          placeholder="Ex: 500,00"
           value={outros}
           onChange={(e) => setOutros(formatCurrencyInput(e.target.value))}
         />

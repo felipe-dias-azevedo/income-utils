@@ -6,7 +6,6 @@ import {
   Card,
   Heading,
   Box,
-  Strong,
   Switch,
   Callout,
   Separator,
@@ -150,7 +149,8 @@ export function CompareTax({
                   ? "Salário Mensal Bruto 2025"
                   : "Salário Mensal Bruto"
               }
-              placeholder="Ex: R$ 3.000,00"
+              prefix="R$"
+              placeholder="Ex: 3.000,00"
               value={gross}
               onChange={(e) => {
                 const v = formatCurrencyInput(e.target.value);
@@ -161,7 +161,8 @@ export function CompareTax({
             {doubleCompare && (
               <NumericLabeledInput
                 label="Salário Mensal Bruto 2026"
-                placeholder="Ex: R$ 3.000,00"
+                prefix="R$"
+                placeholder="Ex: 3.000,00"
                 value={gross2}
                 onChange={(e) => {
                   const v = formatCurrencyInput(e.target.value);
@@ -216,12 +217,21 @@ export function CompareTax({
               <Callout.Text
               //style={{ width: "100%" }}
               >
-                <Text>Comparação de 2025 para 2026: </Text>
-                <Strong key={compareAbsolute} className="valuechange-animated">
+                <Text size="2">Comparação de 2025 para 2026: </Text>
+                <Text
+                  size="2"
+                  weight="bold"
+                  key={compareAbsolute}
+                  className="valuechange-animated"
+                >
                   {compareAbsolute > 0 ? "+" : <>&minus;</>}
                   {formatCurrency(Math.abs(compareAbsolute))}
-                </Strong>
-                <Text key={comparePercentage} className="valuechange-animated">
+                </Text>
+                <Text
+                  size="2"
+                  key={comparePercentage}
+                  className="valuechange-animated"
+                >
                   {" "}
                   ({comparePercentage})
                 </Text>
@@ -236,7 +246,8 @@ export function CompareTax({
             gap="4"
           >
             <TaxResultCard
-              heading="Resultado Salário 2026"
+              heading="Resultado Salário"
+              subtitleText="2026"
               gross={net2026.grossMonth}
               net={net2026.netMonth}
               deductions={[
@@ -252,7 +263,8 @@ export function CompareTax({
 
             {compare2025 && (
               <TaxResultCard
-                heading="Resultado Salário 2025"
+                heading="Resultado Salário"
+                subtitleText="2025"
                 gross={net2025.grossMonth}
                 net={net2025.netMonth}
                 deductions={[
@@ -291,6 +303,7 @@ export function CompareTax({
                 <InfoCircledIcon />
               </Callout.Icon>
               <Callout.Text>
+                {/* TODO: align center text */}
                 Imposto sobre PLR não foi alterado para 2026
               </Callout.Text>
             </Callout.Root>
@@ -298,8 +311,9 @@ export function CompareTax({
 
           <Flex gap="5">
             <NumericLabeledInput
-              label={"PLR Anual Bruto"}
-              placeholder="Ex: R$ 3.000,00"
+              label="PLR Anual Bruto"
+              prefix="R$"
+              placeholder="Ex: 3.000,00"
               value={grossBonus}
               onChange={(e) => {
                 const v = formatCurrencyInput(e.target.value);

@@ -1,4 +1,12 @@
-import { Flex, Card, Heading, Text, Strong, Separator } from "@radix-ui/themes";
+import {
+  Flex,
+  Card,
+  Heading,
+  Text,
+  Strong,
+  Separator,
+  Badge
+} from "@radix-ui/themes";
 import { formatCurrency, formatPercentage } from "../utils/formatting";
 import { PieChart } from "./Charts/PieChart";
 
@@ -30,12 +38,19 @@ export function TaxResultCard({
   return (
     <Card className="popup-animated">
       <Flex p="2" gap="4" direction="column">
-        <Heading size="5">{heading}</Heading>
-        {subtitleText && (
-          <Text size="1" color="gray">
-            {subtitleText}
-          </Text>
-        )}
+        <Flex gap="4" direction="row" align="center" justify="between">
+          <Heading size="5">{heading}</Heading>
+          {subtitleText && (
+            <Badge
+              size="3"
+              radius="full"
+              variant="outline"
+              style={{ userSelect: "none" }}
+            >
+              {subtitleText}
+            </Badge>
+          )}
+        </Flex>
 
         <Flex direction="column" gap="1">
           <Flex align="center" justify="between" gap="4">

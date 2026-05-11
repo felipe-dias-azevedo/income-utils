@@ -52,12 +52,7 @@ export function formatCurrencyInput(value: string): string {
   // Convert to number with 2 decimal places
   const num = parseInt(numeric, 10) / 100;
 
-  return num.toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-    currency: "BRL",
-    style: "currency"
-  });
+  return formatCurrencySimple(num);
 }
 
 export function formatPercentageInput(value: string): string {
