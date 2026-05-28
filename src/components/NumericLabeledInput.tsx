@@ -1,4 +1,4 @@
-import { Box } from "@radix-ui/themes";
+import { Box, Text } from "@radix-ui/themes";
 import NumericInput from "./NumericInput";
 import type { CSSProperties } from "react";
 
@@ -8,6 +8,7 @@ interface NumericLabeledInputProps {
   placeholder?: string;
   value: string;
   max?: number;
+  required?: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   style?: CSSProperties;
 }
@@ -18,13 +19,23 @@ export default function NumericLabeledInput({
   placeholder,
   value,
   max,
+  required,
   onChange,
   style
 }: NumericLabeledInputProps) {
   return (
     <Box style={{ flex: 1 }} width="100%">
       <label>
-        <div style={{ marginBottom: "8px", fontSize: "14px" }}>{label}</div>
+        <Box mb="2">
+          <Text size="2">
+            {label}{" "}
+            {required && (
+              <Text as="span" color="red" aria-hidden="true">
+                *
+              </Text>
+            )}
+          </Text>
+        </Box>
         <NumericInput
           prefix={prefix}
           placeholder={placeholder}

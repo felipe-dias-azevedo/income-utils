@@ -1,4 +1,5 @@
 // Brazilian formatting utilities
+import "../extensions/string.extensions";
 
 export function formatCurrency(value: number): string {
   return new Intl.NumberFormat("pt-BR", {
@@ -91,4 +92,22 @@ export const getPercentageColor = (
   if (percentage === "N/A") return "gray";
   if (percentage.includes("+")) return "green";
   return "red";
+};
+
+export const formatMonthShort = (month: string | number) => {
+  const monthValue: number = +month;
+  const monthLabel = new Intl.DateTimeFormat("pt-BR", {
+    month: "short"
+  }).format(new Date(2025, monthValue - 1, 1));
+
+  return monthLabel.slice(0, 3).toCapitalize();
+};
+
+export const formatMonth = (month: string | number) => {
+  const monthValue: number = +month;
+  return new Intl.DateTimeFormat("pt-BR", {
+    month: "long"
+  })
+    .format(new Date(2025, monthValue - 1, 1))
+    .toCapitalize();
 };

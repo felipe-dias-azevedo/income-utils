@@ -15,7 +15,7 @@ function HeaderStart() {
       gap="3"
       style={{ flex: 1 }}
     >
-      <Heading size="5">Utilitários de Renda</Heading>
+      <Heading size="5">Simulador Financeiro</Heading>
       <AppUpdatedDate />
     </Flex>
   );

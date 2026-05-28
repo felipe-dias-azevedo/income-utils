@@ -1,5 +1,7 @@
 import { Box, Flex, Text } from "@radix-ui/themes";
 import type { DefaultLegendContentProps } from "recharts";
+import { TextNumeric } from "../Common/TextNumeric";
+import { useMemo } from "react";
 // import type { LegendPayload } from "recharts";
 
 // type LegendPayloadItem = {
@@ -14,8 +16,11 @@ import type { DefaultLegendContentProps } from "recharts";
 
 export default function LegendChart({
   payload,
-  formatter,
+  layout,
+  formatter
 }: DefaultLegendContentProps) {
+  const isHorizontal = useMemo(() => layout === "horizontal", [layout]);
+
   if (payload) {
     return (
       <ul
@@ -25,12 +30,23 @@ export default function LegendChart({
           margin: "0px",
           textAlign: "left",
           listStyle: "none",
+          display: isHorizontal ? "flex" : "block",
+          /* flexWrap: isHorizontal ? "wrap" : undefined, */
+          alignItems: isHorizontal ? "center" : undefined,
+          justifyContent: isHorizontal ? "center" : undefined,
+          gap: isHorizontal ? "var(--space-1)" : undefined
         }}
       >
         {payload.map((entry, i) => (
-          <li key={i} className={`recharts-legend-item legend-item-${i}`}>
-            <Flex gap="2" justify="between">
-              <Flex gap="2" align="center" justify="start">
+          <li
+            key={i}
+            className={`recharts-legend-item legend-item-${i}`}
+            style={{
+              display: isHorizontal ? "inline-flex" : "block"
+            }}
+          >
+            <Flex gap="2" justify="between" align="center">
+              <Flex gap="2" align="center">
                 <Box
                   style={{
                     width: "12px",
@@ -38,14 +54,18 @@ export default function LegendChart({
                     borderRadius: "2px",
                     backgroundColor: entry.color,
                     border: "none",
+                    flexShrink: 0
                   }}
                 />
-                <Text size="2">{entry.value}: </Text>
+                <Text size="2">
+                  {entry.value}
+                  {formatter && ": "}
+                </Text>
               </Flex>
 
-              <Text size="2" weight="bold">
-                {formatter ? formatter(entry.value, entry, i) : entry.value}
-              </Text>
+              <TextNumeric size="2" weight="bold">
+                {formatter && formatter(entry.value, entry, i)}
+              </TextNumeric>
             </Flex>
           </li>
         ))}

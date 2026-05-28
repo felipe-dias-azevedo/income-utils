@@ -8,13 +8,11 @@ import {
   ContextMenu,
   Dialog,
   Popover,
-  SegmentedControl,
-  Separator,
   Button,
   IconButton,
   DropdownMenu,
   Tooltip,
-  Select
+  Heading
 } from "@radix-ui/themes";
 import {
   TrashIcon,
@@ -30,12 +28,15 @@ import {
   CalendarIcon,
   ComponentInstanceIcon,
   ComponentBooleanIcon,
-  BarChartIcon
+  LoopIcon
 } from "@radix-ui/react-icons";
 import type { ComputedIncome } from "../types/income";
-import { formatCurrencySymbol, formatPercentage } from "../utils/formatting";
+import {
+  calculatePercentageDifference,
+  formatCurrencySymbol,
+  formatMonthShort
+} from "../utils/formatting";
 import { IncomeForm } from "./IncomeForm";
-import "../styles/table-animations.css";
 import { useIncomeContext } from "../contexts/IncomeContext";
 import { useAlertDialog } from "./AlertDialogContext";
 import { exportToCSV } from "../utils/exportCSV";
@@ -45,6 +46,9 @@ import {
   loadNumberFromLocalStorage,
   saveNumberToLocalStorage
 } from "../utils/storage";
+import OptionComponent from "./OptionComponent";
+import LabelIcon from "./LabelIcon";
+import { TimeLineChart } from "./Charts/LineChart";
 
 type CompareType = "percentage" | "absolute";
 type ViewType = "hora" | "mensal" | "anual";
@@ -150,7 +154,7 @@ const VIEW_TYPE_OPTIONS: Record<ViewType, SelectOption<ViewType>> = {
   anual: {
     value: "anual",
     label: "Anual",
-    icon: <BarChartIcon width="16" height="16" />
+    icon: <LoopIcon width="16" height="16" />
   }
 };
 
@@ -158,12 +162,12 @@ const COMPARE_TYPE_OPTIONS: Record<CompareType, SelectOption<CompareType>> = {
   percentage: {
     value: "percentage",
     label: "Percentual",
-    icon: <span style={{ fontSize: 14, fontWeight: 500 }}>%</span>
+    icon: <LabelIcon>%</LabelIcon>
   },
   absolute: {
     value: "absolute",
     label: "Absoluto",
-    icon: <span style={{ fontSize: 14, fontWeight: 500 }}>123</span>
+    icon: <LabelIcon>123</LabelIcon>
   }
 };
 
@@ -219,6 +223,7 @@ export function IncomeTable() {
   };
   const [popoverOpenId, setPopoverOpenId] = useState<number | null>(null);
   const [openedAddIncome, setOpenedAddIncome] = useState(false);
+  // const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
   const editingIncome = useMemo(
     () => (editingId ? incomes.find((i) => i.id === editingId) : null),
@@ -298,6 +303,7 @@ export function IncomeTable() {
 
   const getRowBackgroundColor = (income: ComputedIncome) => {
     if (income.color && income.color !== "transparent") {
+      // TODO: check to use a brighter color
       return `var(--${income.color}-4)`;
     }
     return "transparent";
@@ -319,243 +325,122 @@ export function IncomeTable() {
     return incomes[0] || null;
   }, [compareBaseId, incomes]);
 
-  const calculatePercentageDifference = (
-    currentValue: number,
-    baseValue: number
-  ): string => {
-    if (baseValue === 0) return "N/A";
-    const percentage = (currentValue - baseValue) / baseValue;
-    const sign = percentage > 0 ? "+" : "";
-    return `${sign}${formatPercentage(percentage)}`;
-  };
-
   const getPercentageColor = (percentage: string): "gray" | "green" | "red" => {
     if (percentage === "N/A") return "gray";
     if (percentage.includes("+")) return "green";
     return "red";
   };
 
+  const timelineData = useMemo(
+    () =>
+      incomes.reduce<Record<string, number[]>>(
+        (
+          acc,
+          {
+            name,
+            grossMonthPlusBenefits,
+            netMonthPlusBenefits,
+            grossBonus,
+            netBonus
+          }
+        ) => {
+          const monthlyValue =
+            grossType === "gross"
+              ? grossMonthPlusBenefits
+              : netMonthPlusBenefits;
+
+          const bonusValue = grossType === "gross" ? grossBonus : netBonus;
+
+          acc[name] = Array.from({ length: 13 }, (_, i) =>
+            i === 0 ? bonusValue : bonusValue + monthlyValue * i
+          );
+
+          return acc;
+        },
+        {}
+      ),
+    [incomes, grossType]
+  );
+
   return (
-    <Card style={{ padding: 0 }}>
-      <Box>
-        {/* Desktop/Tablet View (md and up) */}
-        <Flex
-          justify="between"
-          align="center"
-          mt="4"
-          mb="2"
-          px="4"
-          overflowX="auto"
-          gap="4"
-          display={{ initial: "none", md: "flex" }}
-        >
-          <Flex align="center" gap="4">
-            {/* TODO: use options on segmented controls too */}
-            <SegmentedControl.Root
-              value={grossType}
-              onValueChange={(value) => {
-                setGrossType(value as GrossType);
-                saveStringToLocalStorage(GROSS_TYPE_STORAGE, value);
-              }}
-              className="segmented-colored"
-            >
-              <SegmentedControl.Item value="gross">Bruto</SegmentedControl.Item>
-              <SegmentedControl.Item value="net">Líquido</SegmentedControl.Item>
-            </SegmentedControl.Root>
+    <Flex gap="4" direction="column">
+      <Card style={{ padding: 0 }}>
+        <Box px="4" pt="4" pb="1">
+          <Heading size="5">Comparar Rendas</Heading>
+          <Text size="2">Compare diferentes salários.</Text>
+        </Box>
 
-            <Separator orientation="vertical" />
-
-            <SegmentedControl.Root
-              value={viewType}
-              onValueChange={(value) => {
-                setViewType(value as ViewType);
-                saveStringToLocalStorage(VIEW_TYPE_STORAGE, value);
-              }}
-              className="segmented-colored"
-            >
-              <SegmentedControl.Item value="hora">Hora</SegmentedControl.Item>
-              <SegmentedControl.Item value="mensal">
-                Mensal
-              </SegmentedControl.Item>
-              <SegmentedControl.Item value="anual">Anual</SegmentedControl.Item>
-            </SegmentedControl.Root>
-
-            <Separator orientation="vertical" />
-
-            <SegmentedControl.Root
-              value={compareType}
-              onValueChange={(value) => {
-                setCompareType(value as CompareType);
-                saveStringToLocalStorage(COMPARE_TYPE_STORAGE, value);
-              }}
-              className="segmented-colored"
-            >
-              <SegmentedControl.Item value="percentage">
-                Percentual
-              </SegmentedControl.Item>
-              <SegmentedControl.Item value="absolute">
-                Absoluto
-              </SegmentedControl.Item>
-            </SegmentedControl.Root>
-          </Flex>
-
-          <Flex gap="4" align="center">
-            <Tooltip content="Exportar Rendas para arquivo de planilhas">
-              <Button
-                onClick={() => exportToCSV(incomes)}
-                disabled={incomes.length === 0}
-                variant="surface"
-              >
-                <DownloadIcon /> Exportar
-              </Button>
-            </Tooltip>
-
-            <Tooltip content="Adicionar outra Renda a comparação">
-              <Button
-                variant="surface"
-                onClick={() => setOpenedAddIncome(true)}
-              >
-                <PlusIcon /> Adicionar
-              </Button>
-            </Tooltip>
-          </Flex>
-        </Flex>
-
-        {/* Mobile View (xs, sm) */}
-        <Flex
-          justify="between"
-          align="center"
-          mt="4"
-          mb="2"
-          px="4"
-          gap="2"
-          display={{ initial: "flex", md: "none" }}
-          direction="column"
-          style={{ width: "100%" }}
-        >
-          {/* TODO: improve alignment */}
-          <Flex gap="2" style={{ width: "100%" }} wrap="wrap">
+        <Box>
+          {/* Desktop/Tablet View (md and up) */}
+          <Flex
+            justify="between"
+            align="center"
+            mt="4"
+            mb="2"
+            px="4"
+            direction={{ initial: "column", md: "row" }}
+            gap="4"
+          >
             <Flex
-              direction="column"
-              style={{ flex: 1, minWidth: "100px" }}
-              gap="1"
+              gap="4"
+              align="end"
+              width={{ initial: "100%", md: "auto" }}
+              wrap="wrap"
             >
-              <Text size="1" weight="medium">
-                Tipo
-              </Text>
-              <Select.Root
+              {/* <Flex align="center" gap="4" style={{ width: "100%" }}> */}
+              <OptionComponent<GrossType>
+                label="Tipo"
                 value={grossType}
-                onValueChange={(value) => {
+                onChange={(value) => {
                   setGrossType(value as GrossType);
                   saveStringToLocalStorage(GROSS_TYPE_STORAGE, value);
                 }}
-              >
-                <Select.Trigger />
-                <Select.Content>
-                  <Select.Group>
-                    {Object.values(GROSS_TYPE_OPTIONS).map(
-                      ({ value, label, icon }) => (
-                        <Select.Item key={value} value={value}>
-                          <Flex as="span" align="center" gap="2">
-                            {icon}
-                            {label}
-                          </Flex>
-                        </Select.Item>
-                      )
-                    )}
-                  </Select.Group>
-                </Select.Content>
-              </Select.Root>
-            </Flex>
+                options={GROSS_TYPE_OPTIONS}
+              />
 
-            <Flex
-              direction="column"
-              style={{ flex: 1, minWidth: "100px" }}
-              gap="1"
-            >
-              <Text size="1" weight="medium">
-                Período
-              </Text>
-              <Select.Root
+              <OptionComponent<ViewType>
+                label="Período"
                 value={viewType}
-                onValueChange={(value) => {
+                onChange={(value) => {
                   setViewType(value as ViewType);
                   saveStringToLocalStorage(VIEW_TYPE_STORAGE, value);
                 }}
-              >
-                <Select.Trigger />
-                <Select.Content>
-                  <Select.Group>
-                    {Object.values(VIEW_TYPE_OPTIONS).map(
-                      ({ value, label, icon }) => (
-                        <Select.Item key={value} value={value}>
-                          <Flex as="span" align="center" gap="2">
-                            {icon}
-                            {label}
-                          </Flex>
-                        </Select.Item>
-                      )
-                    )}
-                  </Select.Group>
-                </Select.Content>
-              </Select.Root>
-            </Flex>
+                options={VIEW_TYPE_OPTIONS}
+              />
 
-            <Flex
-              direction="column"
-              style={{ flex: 1, minWidth: "100px" }}
-              gap="1"
-            >
-              <Text size="1" weight="medium">
-                Comparação
-              </Text>
-              <Select.Root
+              <OptionComponent<CompareType>
+                label="Comparação"
                 value={compareType}
-                onValueChange={(value) => {
+                onChange={(value) => {
                   setCompareType(value as CompareType);
                   saveStringToLocalStorage(COMPARE_TYPE_STORAGE, value);
                 }}
-              >
-                <Select.Trigger />
-                <Select.Content>
-                  <Select.Group>
-                    {Object.values(COMPARE_TYPE_OPTIONS).map(
-                      ({ value, label, icon }) => (
-                        <Select.Item key={value} value={value}>
-                          <Flex as="span" align="center" gap="2">
-                            {icon}
-                            {label}
-                          </Flex>
-                        </Select.Item>
-                      )
-                    )}
-                  </Select.Group>
-                </Select.Content>
-              </Select.Root>
+                options={COMPARE_TYPE_OPTIONS}
+              />
             </Flex>
 
-            <Tooltip content="Exportar Rendas para arquivo de planilhas">
-              <IconButton
-                variant="surface"
-                onClick={() => exportToCSV(incomes)}
-                disabled={incomes.length === 0}
-              >
-                <DownloadIcon width="18" height="18" />
-              </IconButton>
-            </Tooltip>
+            <Flex
+              gap="2"
+              align="end"
+              justify="end"
+              width={{ initial: "100%", md: "auto" }}
+              wrap="wrap"
+            >
+              {/* TODO: when including more options, show in dropdown menu
+             <Box display={{ initial: "block", md: "none" }}> */}
+              <Tooltip content="Exportar Rendas para arquivo de planilhas">
+                <Button
+                  onClick={() => exportToCSV(incomes)}
+                  disabled={incomes.length === 0}
+                  variant="surface"
+                >
+                  <DownloadIcon /> Exportar
+                </Button>
+              </Tooltip>
 
-            <Tooltip content="Adicionar outra Renda a comparação">
-              <IconButton
-                variant="surface"
-                onClick={() => setOpenedAddIncome(true)}
-              >
-                <PlusIcon width="18" height="18" />
-              </IconButton>
-            </Tooltip>
-
-            {/* <DropdownMenu.Root
-              open={mobileMenuOpen}
-              onOpenChange={setMobileMenuOpen}
+              {/* <DropdownMenu.Root
+              open={optionsMenuOpen}
+              onOpenChange={setOptionsMenuOpen}
             >
               <DropdownMenu.Trigger>
                 <IconButton variant="surface">
@@ -569,353 +454,394 @@ export function IncomeTable() {
                 >
                   <DownloadIcon /> Exportar
                 </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => setOpenedAddIncome(true)}>
-                  <PlusIcon /> Adicionar
-                </DropdownMenu.Item>
               </DropdownMenu.Content>
             </DropdownMenu.Root> */}
-          </Flex>
-        </Flex>
-      </Box>
 
-      {incomes.length > 0 && (
-        <Box
-          style={{
-            overflowX: "auto",
-            borderRadius: "8px"
-          }}
-        >
-          <Table.Root>
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeaderCell
-                  style={{ width: "40px" }}
-                ></Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell style={{ minWidth: "180px" }}>
-                  Nome
-                </Table.ColumnHeaderCell>
-                {columns.map(({ key, label, isDragHandle }) =>
-                  isDragHandle ? null : (
-                    <Table.ColumnHeaderCell
-                      key={key}
-                      style={{
-                        minWidth: "140px"
-                      }}
-                    >
-                      <Flex align="center" gap="1">
-                        {label}
-                        {/* {bold && <ComponentInstanceIcon />} */}
-                      </Flex>
-                    </Table.ColumnHeaderCell>
-                  )
-                )}
-                <Table.ColumnHeaderCell
-                  style={{ minWidth: "140px", maxWidth: "140px" }}
+              <Tooltip content="Adicionar outra Renda a comparação">
+                <Button
+                  variant="surface"
+                  onClick={() => setOpenedAddIncome(true)}
                 >
-                  Comparação
-                </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell
-                  style={{ width: "40px" }}
-                ></Table.ColumnHeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {incomes.map((income) => (
-                <ContextMenu.Root key={income.id}>
-                  <ContextMenu.Trigger>
-                    <Table.Row
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, income.id)}
-                      onDragLeave={(e) => {
-                        if (e.currentTarget === e.target) {
-                          setDragOverId(null);
-                        }
-                      }}
-                      onDragEnter={() => draggedId && setDragOverId(income.id)}
-                      onDragEnd={handleDragEnd}
-                      style={{
-                        backgroundColor: getRowBackgroundColor(income),
-                        opacity: draggedId === income.id ? 0.35 : 1,
-                        border:
-                          dragOverId === income.id && draggedId
-                            ? "2px dashed var(--accent-10)"
-                            : 0,
-                        transition: "border 50ms ease-out"
-                      }}
-                    >
-                      <Table.Cell
+                  <PlusIcon /> Adicionar
+                </Button>
+              </Tooltip>
+            </Flex>
+          </Flex>
+        </Box>
+
+        {incomes.length > 0 && (
+          <Box
+            style={{
+              overflowX: "auto",
+              borderRadius: "var(--radius-2)"
+            }}
+          >
+            <Table.Root>
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeaderCell
+                    style={{ width: "40px" }}
+                  ></Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell style={{ minWidth: "180px" }}>
+                    Nome
+                  </Table.ColumnHeaderCell>
+                  {columns.map(({ key, label, isDragHandle }) =>
+                    isDragHandle ? null : (
+                      <Table.ColumnHeaderCell
+                        key={key}
                         style={{
-                          width: "40px"
+                          minWidth: "140px"
                         }}
                       >
-                        <Flex
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, income.id)}
-                          align="center"
-                          style={{
-                            cursor:
-                              draggedId === income.id ? "grabbing" : "grab",
-                            transition: "background-color 0.2s ease"
-                          }}
-                        >
-                          <DragHandleDots2Icon width="18" height="18" />
+                        <Flex align="center" gap="1">
+                          {label}
+                          {/* {bold && <ComponentInstanceIcon />} */}
                         </Flex>
-                      </Table.Cell>
-                      <Table.Cell
+                      </Table.ColumnHeaderCell>
+                    )
+                  )}
+                  <Table.ColumnHeaderCell
+                    style={{ minWidth: "140px", maxWidth: "140px" }}
+                  >
+                    Comparação
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell
+                    style={{ width: "40px" }}
+                  ></Table.ColumnHeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {incomes.map((income) => (
+                  <ContextMenu.Root key={income.id}>
+                    <ContextMenu.Trigger>
+                      <Table.Row
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, income.id)}
+                        onDragLeave={(e) => {
+                          if (e.currentTarget === e.target) {
+                            setDragOverId(null);
+                          }
+                        }}
+                        onDragEnter={() =>
+                          draggedId && setDragOverId(income.id)
+                        }
+                        onDragEnd={handleDragEnd}
                         style={{
-                          minWidth: "180px",
-                          maxWidth: "180px"
+                          backgroundColor: getRowBackgroundColor(income),
+                          opacity: draggedId === income.id ? 0.35 : 1,
+                          border:
+                            dragOverId === income.id && draggedId
+                              ? "2px dashed var(--accent-10)"
+                              : 0,
+                          transition: "border 50ms ease-out"
                         }}
                       >
-                        <Flex
-                          align="center"
-                          justify="between"
-                          gap="2"
+                        <Table.Cell
                           style={{
-                            height: "100%",
-                            width: "100%",
-                            minWidth: 0
+                            width: "40px"
                           }}
                         >
-                          <Text
-                            size="2"
-                            weight="bold"
+                          <Flex
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, income.id)}
+                            align="center"
                             style={{
-                              maxWidth: "180px",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap"
+                              cursor:
+                                draggedId === income.id ? "grabbing" : "grab",
+                              transition: "background-color 0.2s ease"
                             }}
                           >
-                            {income.name}
-                          </Text>
-                          <Popover.Root
-                            open={popoverOpenId === income.id}
-                            onOpenChange={(open) =>
-                              setPopoverOpenId(open ? income.id : null)
-                            }
+                            <DragHandleDots2Icon width="18" height="18" />
+                          </Flex>
+                        </Table.Cell>
+                        <Table.Cell
+                          style={{
+                            minWidth: "180px",
+                            maxWidth: "180px"
+                          }}
+                        >
+                          <Flex
+                            align="center"
+                            justify="between"
+                            gap="2"
+                            style={{
+                              height: "100%",
+                              width: "100%",
+                              minWidth: 0
+                            }}
                           >
-                            <Popover.Trigger
-                              onMouseEnter={() => setPopoverOpenId(income.id)}
-                              onMouseLeave={() => setPopoverOpenId(null)}
+                            <Text
+                              size="2"
+                              weight="bold"
+                              style={{
+                                maxWidth: "180px",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap"
+                              }}
                             >
-                              <InfoCircledIcon
-                                width="16"
-                                height="16"
-                                style={{ cursor: "pointer", flexShrink: 0 }}
-                              />
-                            </Popover.Trigger>
-                            <Popover.Content
-                              onMouseEnter={() => setPopoverOpenId(income.id)}
-                              onMouseLeave={() => setPopoverOpenId(null)}
+                              {income.name}
+                            </Text>
+                            <Popover.Root
+                              open={popoverOpenId === income.id}
+                              onOpenChange={(open) =>
+                                setPopoverOpenId(open ? income.id : null)
+                              }
                             >
-                              <Box style={{ maxWidth: "250px" }}>
-                                <Flex direction="column" gap="2">
-                                  <Box>
-                                    <Text size="1" weight="bold">
-                                      Nome:{" "}
-                                    </Text>
-                                    <Text size="1">{income.name}</Text>
-                                  </Box>
-                                  {income.description && (
+                              <Popover.Trigger
+                                onMouseEnter={() => setPopoverOpenId(income.id)}
+                                onMouseLeave={() => setPopoverOpenId(null)}
+                              >
+                                <InfoCircledIcon
+                                  width="16"
+                                  height="16"
+                                  style={{ cursor: "pointer", flexShrink: 0 }}
+                                />
+                              </Popover.Trigger>
+                              <Popover.Content
+                                onMouseEnter={() => setPopoverOpenId(income.id)}
+                                onMouseLeave={() => setPopoverOpenId(null)}
+                              >
+                                <Box style={{ maxWidth: "250px" }}>
+                                  <Flex direction="column" gap="2">
                                     <Box>
                                       <Text size="1" weight="bold">
-                                        Descrição:{" "}
+                                        Nome:{" "}
                                       </Text>
-                                      <Text size="1">{income.description}</Text>
+                                      <Text size="1">{income.name}</Text>
                                     </Box>
-                                  )}
-                                  <Box>
-                                    <Text size="1" weight="bold">
-                                      Salário Mensal:{" "}
-                                    </Text>
-                                    <Text size="1">
-                                      {formatCurrencySymbol(income.grossMonth)}
-                                    </Text>
-                                  </Box>
-                                  <Box>
-                                    <Text size="1" weight="bold">
-                                      {income.plrType === "multiplier" &&
-                                        "Multiplicador de"}{" "}
-                                      PLR:{" "}
-                                    </Text>
-                                    <Text size="1">
-                                      {income.plrType === "multiplier" ? (
-                                        <>
-                                          {income.bonusMultiplier
-                                            .toFixed(2)
-                                            .replace(".", ",")}
-                                          x
-                                        </>
-                                      ) : (
-                                        formatCurrencySymbol(income.bonusFixed)
-                                      )}
-                                    </Text>
-                                  </Box>
-                                  <Box>
-                                    <Text size="1" weight="bold">
-                                      Benefícios:{" "}
-                                    </Text>
-                                    <Text size="1">
-                                      {formatCurrencySymbol(income.benefits)}
-                                    </Text>
-                                  </Box>
-                                  <Box>
-                                    <Text size="1" weight="bold">
-                                      Jornada:{" "}
-                                    </Text>
-                                    <Text size="1">
-                                      {income.workweekHoursType}
-                                    </Text>
-                                  </Box>
-                                </Flex>
-                              </Box>
-                            </Popover.Content>
-                          </Popover.Root>
-                        </Flex>
-                      </Table.Cell>
-                      {columns.map(({ key, bold, isDragHandle, liquidoKey }) =>
-                        isDragHandle ? null : (
-                          <Table.Cell
-                            key={
-                              liquidoKey === undefined
-                                ? `${income.id}-${key}`
-                                : `${income.id}-${key}-${showLiquido}`
+                                    {income.description && (
+                                      <Box>
+                                        <Text size="1" weight="bold">
+                                          Descrição:{" "}
+                                        </Text>
+                                        <Text size="1">
+                                          {income.description}
+                                        </Text>
+                                      </Box>
+                                    )}
+                                    <Box>
+                                      <Text size="1" weight="bold">
+                                        Salário Mensal:{" "}
+                                      </Text>
+                                      <Text size="1">
+                                        {formatCurrencySymbol(
+                                          income.grossMonth
+                                        )}
+                                      </Text>
+                                    </Box>
+                                    <Box>
+                                      <Text size="1" weight="bold">
+                                        {income.plrType === "multiplier" &&
+                                          "Multiplicador de"}{" "}
+                                        PLR:{" "}
+                                      </Text>
+                                      <Text size="1">
+                                        {income.plrType === "multiplier" ? (
+                                          <>
+                                            {income.bonusMultiplier
+                                              .toFixed(2)
+                                              .replace(".", ",")}
+                                            x
+                                          </>
+                                        ) : (
+                                          formatCurrencySymbol(
+                                            income.bonusFixed
+                                          )
+                                        )}
+                                      </Text>
+                                    </Box>
+                                    <Box>
+                                      <Text size="1" weight="bold">
+                                        Benefícios:{" "}
+                                      </Text>
+                                      <Text size="1">
+                                        {formatCurrencySymbol(income.benefits)}
+                                      </Text>
+                                    </Box>
+                                    <Box>
+                                      <Text size="1" weight="bold">
+                                        Jornada:{" "}
+                                      </Text>
+                                      <Text size="1">
+                                        {income.workweekHoursType}
+                                      </Text>
+                                    </Box>
+                                  </Flex>
+                                </Box>
+                              </Popover.Content>
+                            </Popover.Root>
+                          </Flex>
+                        </Table.Cell>
+                        {columns.map(
+                          ({ key, bold, isDragHandle, liquidoKey }) =>
+                            isDragHandle ? null : (
+                              <Table.Cell
+                                key={
+                                  liquidoKey === undefined
+                                    ? `${income.id}-${key}`
+                                    : `${income.id}-${key}-${showLiquido}`
+                                }
+                                style={{
+                                  minWidth: "140px",
+                                  fontWeight: bold === true ? "bold" : "normal"
+                                }}
+                                className="valuechange-animated"
+                              >
+                                {getCellValue(
+                                  income,
+                                  key,
+                                  columns.find((col) => col.key === key)
+                                )}
+                              </Table.Cell>
+                            )
+                        )}
+                        <Table.Cell
+                          key={`${income.id}-compare-${showLiquido}-${viewType}-${compareType}`}
+                          style={{ minWidth: "140px", maxWidth: "140px" }}
+                          className="valuechange-animated"
+                        >
+                          {(() => {
+                            const boldKey = getComparableColumnKey();
+                            if (
+                              !compareBase ||
+                              !boldKey ||
+                              income.id === compareBase.id
+                            ) {
+                              return <Text size="2">—</Text>;
                             }
-                            style={{
-                              minWidth: "140px",
-                              fontWeight: bold === true ? "bold" : "normal"
-                            }}
-                            className="table-cell-animated"
-                          >
-                            {getCellValue(
-                              income,
-                              key,
-                              columns.find((col) => col.key === key)
-                            )}
-                          </Table.Cell>
-                        )
-                      )}
-                      <Table.Cell
-                        key={`${income.id}-compare-${showLiquido}-${viewType}-${compareType}`}
-                        style={{ minWidth: "140px", maxWidth: "140px" }}
-                        className="table-cell-animated"
-                      >
-                        {(() => {
-                          const boldKey = getComparableColumnKey();
-                          if (
-                            !compareBase ||
-                            !boldKey ||
-                            income.id === compareBase.id
-                          ) {
-                            return <Text size="2">—</Text>;
-                          }
-                          const currentValue = income[boldKey] as number;
-                          const baseValue = compareBase[boldKey] as number;
-                          if (compareType === "absolute") {
-                            const difference = currentValue - baseValue;
-                            const sign = difference > 0 ? "+" : "";
+                            const currentValue = income[boldKey] as number;
+                            const baseValue = compareBase[boldKey] as number;
+                            if (compareType === "absolute") {
+                              const difference = currentValue - baseValue;
+                              const sign = difference > 0 ? "+" : <>&minus;</>;
+                              return (
+                                <Text
+                                  size="2"
+                                  weight="bold"
+                                  color={
+                                    difference > 0
+                                      ? "green"
+                                      : difference < 0
+                                        ? "red"
+                                        : "gray"
+                                  }
+                                >
+                                  {sign}
+                                  {formatCurrencySymbol(Math.abs(difference))}
+                                </Text>
+                              );
+                            }
+                            const percentage = calculatePercentageDifference(
+                              currentValue,
+                              baseValue
+                            );
                             return (
                               <Text
                                 size="2"
                                 weight="bold"
-                                color={
-                                  difference > 0
-                                    ? "green"
-                                    : difference < 0
-                                      ? "red"
-                                      : "gray"
-                                }
+                                color={getPercentageColor(percentage)}
                               >
-                                {sign}
-                                {formatCurrencySymbol(difference)}
+                                {percentage}
                               </Text>
                             );
-                          }
-                          const percentage = calculatePercentageDifference(
-                            currentValue,
-                            baseValue
-                          );
-                          return (
-                            <Text
-                              size="2"
-                              weight="bold"
-                              color={getPercentageColor(percentage)}
-                            >
-                              {percentage}
-                            </Text>
-                          );
-                        })()}
-                      </Table.Cell>
-                      <Table.Cell px="4" style={{ width: "40px" }}>
-                        <DropdownMenu.Root>
-                          <DropdownMenu.Trigger>
-                            <IconButton color="gray" size="2" variant="ghost">
-                              <DotsHorizontalIcon width="18" height="18" />
-                            </IconButton>
-                          </DropdownMenu.Trigger>
-                          <DropdownMenu.Content>
-                            <DropdownMenu.Item
-                              onClick={() => setEditingId(income.id)}
-                            >
-                              <Pencil1Icon /> Editar
-                            </DropdownMenu.Item>
-                            {compareBase?.id !== income.id && (
+                          })()}
+                        </Table.Cell>
+                        <Table.Cell px="4" style={{ width: "40px" }}>
+                          <DropdownMenu.Root>
+                            <DropdownMenu.Trigger>
+                              <IconButton color="gray" size="2" variant="ghost">
+                                <DotsHorizontalIcon width="18" height="18" />
+                              </IconButton>
+                            </DropdownMenu.Trigger>
+                            <DropdownMenu.Content>
                               <DropdownMenu.Item
-                                onClick={() =>
-                                  handleSetCompareBaseId(income.id)
-                                }
+                                onClick={() => setEditingId(income.id)}
                               >
-                                <SliderIcon /> Comparar com este
+                                <Pencil1Icon /> Editar
                               </DropdownMenu.Item>
-                            )}
-                            <DropdownMenu.Item
-                              color="red"
-                              onClick={() => onDelete(income.id)}
-                            >
-                              <TrashIcon /> Deletar
-                            </DropdownMenu.Item>
-                          </DropdownMenu.Content>
-                        </DropdownMenu.Root>
-                      </Table.Cell>
-                    </Table.Row>
-                  </ContextMenu.Trigger>
-                  <ContextMenu.Content>
-                    <ContextMenu.Item onClick={() => setEditingId(income.id)}>
-                      <Pencil1Icon /> Editar
-                    </ContextMenu.Item>
-                    {compareBase?.id !== income.id && (
-                      <ContextMenu.Item
-                        onClick={() => handleSetCompareBaseId(income.id)}
-                      >
-                        <SliderIcon />
-                        Comparar com este
+                              {compareBase?.id !== income.id && (
+                                <DropdownMenu.Item
+                                  onClick={() =>
+                                    handleSetCompareBaseId(income.id)
+                                  }
+                                >
+                                  <SliderIcon /> Comparar com este
+                                </DropdownMenu.Item>
+                              )}
+                              <DropdownMenu.Item
+                                color="red"
+                                onClick={() => onDelete(income.id)}
+                              >
+                                <TrashIcon /> Deletar
+                              </DropdownMenu.Item>
+                            </DropdownMenu.Content>
+                          </DropdownMenu.Root>
+                        </Table.Cell>
+                      </Table.Row>
+                    </ContextMenu.Trigger>
+                    <ContextMenu.Content>
+                      <ContextMenu.Item onClick={() => setEditingId(income.id)}>
+                        <Pencil1Icon /> Editar
                       </ContextMenu.Item>
-                    )}
-                    <ContextMenu.Item
-                      color="red"
-                      onClick={() => onDelete(income.id)}
-                    >
-                      <TrashIcon /> Deletar
-                    </ContextMenu.Item>
-                  </ContextMenu.Content>
-                </ContextMenu.Root>
-              ))}
-            </Table.Body>
-          </Table.Root>
-        </Box>
-      )}
+                      {compareBase?.id !== income.id && (
+                        <ContextMenu.Item
+                          onClick={() => handleSetCompareBaseId(income.id)}
+                        >
+                          <SliderIcon />
+                          Comparar com este
+                        </ContextMenu.Item>
+                      )}
+                      <ContextMenu.Item
+                        color="red"
+                        onClick={() => onDelete(income.id)}
+                      >
+                        <TrashIcon /> Deletar
+                      </ContextMenu.Item>
+                    </ContextMenu.Content>
+                  </ContextMenu.Root>
+                ))}
+              </Table.Body>
+            </Table.Root>
+          </Box>
+        )}
 
-      {editingIncome && editingId !== null && (
+        {editingIncome && editingId !== null && (
+          <Dialog.Root
+            open={editingId !== null}
+            onOpenChange={(open) => {
+              if (!open) setEditingId(null);
+            }}
+          >
+            <Dialog.Content aria-describedby={undefined}>
+              <Flex justify="between" align="start" mt="4" px="4">
+                <Dialog.Title>Editar Renda</Dialog.Title>
+
+                <Dialog.Close>
+                  <IconButton size="3" variant="ghost">
+                    <Cross2Icon width="18" height="18" />
+                  </IconButton>
+                </Dialog.Close>
+              </Flex>
+              <Box p="4">
+                <IncomeForm
+                  initialData={{ ...editingIncome }}
+                  onSubmit={() => setEditingId(null)}
+                />
+              </Box>
+            </Dialog.Content>
+          </Dialog.Root>
+        )}
+
         <Dialog.Root
-          open={editingId !== null}
+          open={openedAddIncome}
           onOpenChange={(open) => {
-            if (!open) setEditingId(null);
+            if (!open) setOpenedAddIncome(false);
           }}
         >
-          <Dialog.Content>
+          <Dialog.Content aria-describedby={undefined}>
             <Flex justify="between" align="start" mt="4" px="4">
-              <Dialog.Title>Editar Renda</Dialog.Title>
+              <Dialog.Title>Adicionar Renda</Dialog.Title>
 
               <Dialog.Close>
                 <IconButton size="3" variant="ghost">
@@ -923,38 +849,62 @@ export function IncomeTable() {
                 </IconButton>
               </Dialog.Close>
             </Flex>
+
             <Box p="4">
-              <IncomeForm
-                initialData={{ ...editingIncome }}
-                onSubmit={() => setEditingId(null)}
-              />
+              <IncomeForm />
             </Box>
           </Dialog.Content>
         </Dialog.Root>
-      )}
+      </Card>
 
-      <Dialog.Root
-        open={openedAddIncome}
-        onOpenChange={(open) => {
-          if (!open) setOpenedAddIncome(false);
-        }}
-      >
-        <Dialog.Content>
-          <Flex justify="between" align="start" mt="4" px="4">
-            <Dialog.Title>Adicionar Renda</Dialog.Title>
+      <Card style={{ padding: "0" }} className="popup-animated">
+        <Flex p="0" gap="1" direction="column">
+          <Flex p="4" gap="4" direction="column">
+            <Box>
+              <Heading size="5">Evolução Salarial</Heading>
+              <Text size="2">
+                Compare a evolução dos salários ao longo do ano.
+              </Text>
+            </Box>
 
-            <Dialog.Close>
-              <IconButton size="3" variant="ghost">
-                <Cross2Icon width="18" height="18" />
-              </IconButton>
-            </Dialog.Close>
+            <Flex
+              gap="4"
+              align="end"
+              width={{ initial: "100%", md: "auto" }}
+              wrap="wrap"
+            >
+              <OptionComponent<GrossType>
+                label="Tipo"
+                value={grossType}
+                onChange={(value) => {
+                  setGrossType(value as GrossType);
+                  saveStringToLocalStorage(GROSS_TYPE_STORAGE, value);
+                }}
+                options={GROSS_TYPE_OPTIONS}
+              />
+            </Flex>
           </Flex>
 
-          <Box p="4">
-            <IncomeForm />
-          </Box>
-        </Dialog.Content>
-      </Dialog.Root>
-    </Card>
+          {/* TODO: show a comparision using bar chart */}
+
+          <Flex pl="0" pb="4" pr="1" gap="4" direction="column">
+            <TimeLineChart
+              data={timelineData}
+              colors={incomes.reduce<Record<string, string>>(
+                (acc, { name, color }) => (
+                  (acc[name] = color ?? "transparent"),
+                  acc
+                ),
+                {}
+              )}
+              formatter={(value, _) => formatCurrencySymbol(value)}
+              labels={Array.from({ length: 13 }, (_, i) =>
+                i === 0 ? "PLR" : formatMonthShort(i)
+              )}
+            />
+          </Flex>
+        </Flex>
+      </Card>
+    </Flex>
   );
 }

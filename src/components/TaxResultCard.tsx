@@ -1,14 +1,7 @@
-import {
-  Flex,
-  Card,
-  Heading,
-  Text,
-  Strong,
-  Separator,
-  Badge
-} from "@radix-ui/themes";
+import { Flex, Card, Heading, Text, Separator, Badge } from "@radix-ui/themes";
 import { formatCurrency, formatPercentage } from "../utils/formatting";
 import { PieChart } from "./Charts/PieChart";
+import { TextNumeric } from "./Common/TextNumeric";
 
 export interface TaxResultValue {
   label: string;
@@ -55,22 +48,26 @@ export function TaxResultCard({
         <Flex direction="column" gap="1">
           <Flex align="center" justify="between" gap="4">
             <Text size="3">Valor Bruto: </Text>
-            <Strong key={gross} className="valuechange-animated">
+            <TextNumeric
+              weight="bold"
+              key={gross}
+              className="valuechange-animated"
+            >
               {formatCurrency(gross)}
-            </Strong>
+            </TextNumeric>
           </Flex>
 
           {deductions.map((deduction, index) => (
             <Flex key={index} align="center" justify="between" gap="4">
               <Text size="3">{deduction.label}:</Text>
-              <Text
+              <TextNumeric
                 key={deduction.value}
                 color="red"
                 weight="bold"
                 className="valuechange-animated"
               >
                 &minus; {formatCurrency(deduction.value)}
-              </Text>
+              </TextNumeric>
             </Flex>
           ))}
 
@@ -78,9 +75,13 @@ export function TaxResultCard({
 
           <Flex align="center" justify="between" gap="4">
             <Text size="3">Total Líquido: </Text>
-            <Strong key={net} className="valuechange-animated">
+            <TextNumeric
+              weight="bold"
+              key={net}
+              className="valuechange-animated"
+            >
               {formatCurrency(net)}
-            </Strong>
+            </TextNumeric>
           </Flex>
         </Flex>
 
