@@ -3,11 +3,13 @@ import type { ReactNode } from "react";
 
 export interface TextNumericProps {
   children: ReactNode;
+  animate?: boolean;
 }
 
 export function TextNumeric({
   children,
   style,
+  animate,
   ...props
 }: TextNumericProps & TextProps) {
   return (
@@ -18,6 +20,7 @@ export function TextNumeric({
         fontFeatureSettings: "tnum",
         ...style
       }}
+      className={animate ? "valuechange-animated" : undefined}
     >
       {children}
     </Text>

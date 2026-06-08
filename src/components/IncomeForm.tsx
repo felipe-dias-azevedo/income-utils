@@ -176,6 +176,8 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
       color: values.color,
       createdAt: Date.now(),
       paidMonths: 12,
+      contractType: "CLT",
+      taxTableType: undefined,
       index: initialData?.index || 0
     };
 
@@ -363,7 +365,9 @@ export function IncomeForm({ onSubmit, initialData }: IncomeFormProps) {
 
         <Box>
           <label>
-            <div style={{ marginBottom: "8px", fontSize: "14px" }}>Jornada</div>
+            <div style={{ marginBottom: "8px", fontSize: "14px" }}>
+              Jornada Semanal
+            </div>
             <Controller
               control={control}
               name="workweekHoursType"

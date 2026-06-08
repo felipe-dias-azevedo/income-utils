@@ -6,6 +6,7 @@ interface NumericInputProps {
   placeholder?: string;
   value: string;
   max?: number;
+  required?: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   style?: CSSProperties;
 }
@@ -15,6 +16,7 @@ export default function NumericInput({
   placeholder,
   value,
   max,
+  required,
   onChange,
   style
 }: NumericInputProps) {
@@ -26,6 +28,7 @@ export default function NumericInput({
       placeholder={placeholder}
       value={value}
       max={max}
+      required={required}
       radius="large"
       onChange={onChange}
       style={style}

@@ -10,7 +10,7 @@ interface HeaderSectionProps {
 function HeaderStart() {
   return (
     <Flex
-      display={{ initial: "none", sm: "flex" }}
+      // display={{ initial: "none", sm: "flex" }}
       align="center"
       gap="3"
       style={{ flex: 1 }}

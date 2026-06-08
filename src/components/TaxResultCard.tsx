@@ -48,11 +48,7 @@ export function TaxResultCard({
         <Flex direction="column" gap="1">
           <Flex align="center" justify="between" gap="4">
             <Text size="3">Valor Bruto: </Text>
-            <TextNumeric
-              weight="bold"
-              key={gross}
-              className="valuechange-animated"
-            >
+            <TextNumeric weight="bold" key={gross} animate>
               {formatCurrency(gross)}
             </TextNumeric>
           </Flex>
@@ -64,7 +60,7 @@ export function TaxResultCard({
                 key={deduction.value}
                 color="red"
                 weight="bold"
-                className="valuechange-animated"
+                animate
               >
                 &minus; {formatCurrency(deduction.value)}
               </TextNumeric>
@@ -75,11 +71,7 @@ export function TaxResultCard({
 
           <Flex align="center" justify="between" gap="4">
             <Text size="3">Total Líquido: </Text>
-            <TextNumeric
-              weight="bold"
-              key={net}
-              className="valuechange-animated"
-            >
+            <TextNumeric weight="bold" key={net} animate>
               {formatCurrency(net)}
             </TextNumeric>
           </Flex>

@@ -6,6 +6,13 @@ export const JornadaType = {
 
 export type JornadaType = (typeof JornadaType)[keyof typeof JornadaType];
 
+export const TaxTableType = {
+  2025: "2025",
+  2026: "2026"
+} as const;
+
+export type TaxTableType = (typeof TaxTableType)[keyof typeof TaxTableType];
+
 export interface IncomeEntry {
   id?: number;
   name: string; // Name for the income entry (max 12 characters)
@@ -16,6 +23,9 @@ export interface IncomeEntry {
   bonusFixed: number; // If PLR is a fixed value
   benefits: number;
   workweekHoursType: JornadaType;
+  commuterBenefit?: boolean; // Vale transporte
+  contractType?: "CLT" | "PJ"; // Contract type, default is CLT
+  taxTableType?: TaxTableType; // Base tax calculation method
   color?: string; // Radix UI color (e.g., "red", "blue", "transparent")
   paidMonths: number; // Number of months the salary is paid (e.g., 12 or 13)
   createdAt?: number;
@@ -45,4 +55,9 @@ export interface ComputedIncome extends IncomeEntry {
   grossHourPlusBenefits: number;
   netHour: number;
   netHourPlusBenefits: number;
+  overtimeHour: number;
+  grossMonthTotal: number;
+  grossMonthTotalPlusBenefits: number;
+  netMonthTotal: number;
+  netMonthTotalPlusBenefits: number;
 }

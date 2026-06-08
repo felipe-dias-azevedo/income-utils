@@ -6,7 +6,6 @@ import {
   Card,
   Text,
   ContextMenu,
-  Dialog,
   Popover,
   Button,
   IconButton,
@@ -14,6 +13,7 @@ import {
   Tooltip,
   Heading
 } from "@radix-ui/themes";
+import { DialogPanel } from "./DialogPanel";
 import {
   TrashIcon,
   Pencil1Icon,
@@ -21,7 +21,6 @@ import {
   InfoCircledIcon,
   SliderIcon,
   PlusIcon,
-  Cross2Icon,
   DotsHorizontalIcon,
   DownloadIcon,
   ClockIcon,
@@ -51,7 +50,7 @@ import LabelIcon from "./LabelIcon";
 import { TimeLineChart } from "./Charts/LineChart";
 
 type CompareType = "percentage" | "absolute";
-type ViewType = "hora" | "mensal" | "anual";
+type ViewType = "hora" | "mensal" | "total_mensal" | "anual";
 type GrossType = "gross" | "net";
 
 const COMPARE_TYPE_STORAGE = "compare_type";
@@ -71,6 +70,7 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
   hora: [
     { key: "drag_handle", label: "", isDragHandle: true },
     { key: "workweekHoursType", label: "Jornada" },
+    { key: "overtimeHour", label: "Hora Extra" },
     {
       key: "grossHour",
       label: "Salário/Hora",
@@ -98,6 +98,20 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
       liquidoKey: "netMonthPlusBenefits"
     }
   ],
+  total_mensal: [
+    { key: "drag_handle", label: "", isDragHandle: true },
+    {
+      key: "grossMonthTotal",
+      label: "Anual/Mês",
+      liquidoKey: "netMonthTotal"
+    },
+    {
+      key: "grossMonthTotalPlusBenefits",
+      label: "Total/Mês",
+      bold: true,
+      liquidoKey: "netMonthTotalPlusBenefits"
+    }
+  ],
   anual: [
     { key: "drag_handle", label: "", isDragHandle: true },
     {
@@ -106,11 +120,11 @@ const VIEW_CONFIGS: Record<ViewType, ColumnConfig[]> = {
       liquidoKey: "netYear"
     },
     { key: "grossBonus", label: "PLR", liquidoKey: "netBonus" },
-    {
-      key: "grossYearPlusBonus",
-      label: "Salário + PLR",
-      liquidoKey: "netYearPlusBonus"
-    },
+    // {
+    //   key: "grossYearPlusBonus",
+    //   label: "Salário + PLR",
+    //   liquidoKey: "netYearPlusBonus"
+    // },
     { key: "benefitsYear", label: "Benefícios/Ano" },
     {
       key: "grossYearPlusBonusPlusBenefits",
@@ -151,6 +165,11 @@ const VIEW_TYPE_OPTIONS: Record<ViewType, SelectOption<ViewType>> = {
     label: "Mensal",
     icon: <CalendarIcon width="16" height="16" />
   },
+  total_mensal: {
+    value: "total_mensal",
+    label: "Comp. Total Mensal",
+    icon: <CalendarIcon width="16" height="16" />
+  },
   anual: {
     value: "anual",
     label: "Anual",
@@ -171,7 +190,7 @@ const COMPARE_TYPE_OPTIONS: Record<CompareType, SelectOption<CompareType>> = {
   }
 };
 
-export function IncomeTable() {
+export function CompareIncomes() {
   const {
     incomes,
     actions: { deleteById, reorder }
@@ -264,6 +283,7 @@ export function IncomeTable() {
     e.dataTransfer.dropEffect = "move";
   };
 
+  // TODO: remove drag/drop and replace with automatic reorder for compare column result (biggest to lowest)
   const handleDrop = (
     e: React.DragEvent<HTMLTableRowElement>,
     targetId: number
@@ -371,20 +391,21 @@ export function IncomeTable() {
         </Box>
 
         <Box>
-          {/* Desktop/Tablet View (md and up) */}
           <Flex
             justify="between"
             align="center"
             mt="4"
             mb="2"
             px="4"
-            direction={{ initial: "column", md: "row" }}
+            /* direction={{ initial: "column", md: "row" }} */
+            direction="column"
             gap="4"
           >
             <Flex
               gap="4"
               align="end"
-              width={{ initial: "100%", md: "auto" }}
+              /* width={{ initial: "100%", md: "auto" }} */
+              width="100%"
               wrap="wrap"
             >
               {/* <Flex align="center" gap="4" style={{ width: "100%" }}> */}
@@ -396,6 +417,7 @@ export function IncomeTable() {
                   saveStringToLocalStorage(GROSS_TYPE_STORAGE, value);
                 }}
                 options={GROSS_TYPE_OPTIONS}
+                component="menu"
               />
 
               <OptionComponent<ViewType>
@@ -406,6 +428,7 @@ export function IncomeTable() {
                   saveStringToLocalStorage(VIEW_TYPE_STORAGE, value);
                 }}
                 options={VIEW_TYPE_OPTIONS}
+                component="menu"
               />
 
               <OptionComponent<CompareType>
@@ -416,6 +439,7 @@ export function IncomeTable() {
                   saveStringToLocalStorage(COMPARE_TYPE_STORAGE, value);
                 }}
                 options={COMPARE_TYPE_OPTIONS}
+                component="menu"
               />
             </Flex>
 
@@ -423,7 +447,8 @@ export function IncomeTable() {
               gap="2"
               align="end"
               justify="end"
-              width={{ initial: "100%", md: "auto" }}
+              /* width={{ initial: "100%", md: "auto" }} */
+              width="100%"
               wrap="wrap"
             >
               {/* TODO: when including more options, show in dropdown menu
@@ -807,65 +832,42 @@ export function IncomeTable() {
         )}
 
         {editingIncome && editingId !== null && (
-          <Dialog.Root
+          <DialogPanel
             open={editingId !== null}
             onOpenChange={(open) => {
               if (!open) setEditingId(null);
             }}
+            title="Editar Renda"
           >
-            <Dialog.Content aria-describedby={undefined}>
-              <Flex justify="between" align="start" mt="4" px="4">
-                <Dialog.Title>Editar Renda</Dialog.Title>
-
-                <Dialog.Close>
-                  <IconButton size="3" variant="ghost">
-                    <Cross2Icon width="18" height="18" />
-                  </IconButton>
-                </Dialog.Close>
-              </Flex>
-              <Box p="4">
-                <IncomeForm
-                  initialData={{ ...editingIncome }}
-                  onSubmit={() => setEditingId(null)}
-                />
-              </Box>
-            </Dialog.Content>
-          </Dialog.Root>
+            <IncomeForm
+              initialData={{ ...editingIncome }}
+              onSubmit={() => setEditingId(null)}
+            />
+          </DialogPanel>
         )}
 
-        <Dialog.Root
+        <DialogPanel
           open={openedAddIncome}
           onOpenChange={(open) => {
             if (!open) setOpenedAddIncome(false);
           }}
+          title="Adicionar Renda"
         >
-          <Dialog.Content aria-describedby={undefined}>
-            <Flex justify="between" align="start" mt="4" px="4">
-              <Dialog.Title>Adicionar Renda</Dialog.Title>
-
-              <Dialog.Close>
-                <IconButton size="3" variant="ghost">
-                  <Cross2Icon width="18" height="18" />
-                </IconButton>
-              </Dialog.Close>
-            </Flex>
-
-            <Box p="4">
-              <IncomeForm />
-            </Box>
-          </Dialog.Content>
-        </Dialog.Root>
+          <IncomeForm />
+        </DialogPanel>
       </Card>
 
       <Card style={{ padding: "0" }} className="popup-animated">
         <Flex p="0" gap="1" direction="column">
           <Flex p="4" gap="4" direction="column">
             <Box>
-              <Heading size="5">Evolução Salarial</Heading>
+              <Heading size="5">Acúmulo Salarial</Heading>
               <Text size="2">
-                Compare a evolução dos salários ao longo do ano.
+                Visualize o acúmulo dos salários ao longo de um ano.
               </Text>
             </Box>
+
+            {/* TODO: add dropdown multi select to choose which incomes to show/hide from the chart */}
 
             <Flex
               gap="4"
@@ -881,6 +883,7 @@ export function IncomeTable() {
                   saveStringToLocalStorage(GROSS_TYPE_STORAGE, value);
                 }}
                 options={GROSS_TYPE_OPTIONS}
+                component="menu"
               />
             </Flex>
           </Flex>

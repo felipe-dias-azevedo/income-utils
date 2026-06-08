@@ -1,4 +1,5 @@
 import { Flex, SegmentedControl, Select, Text } from "@radix-ui/themes";
+import { useMemo, type ComponentProps } from "react";
 
 export interface OptionValue<T extends string> {
   value: T;
@@ -12,20 +13,43 @@ interface OptionComponentProps<T extends string> {
   onChange: (value: T) => void;
   value: T;
   options: Record<T, OptionValue<T>>;
+  component?: "menu" | "segmented";
 }
 
+type FlexDisplay = ComponentProps<typeof Flex>["display"];
+
 export default function OptionComponent<T extends string>({
+  component: force,
   label,
   hideLabel,
   options,
   onChange,
   value
 }: OptionComponentProps<T>) {
-  const optionValues = Object.values(options) as OptionValue<T>[];
+  const optionValues = useMemo(
+    () => Object.values(options) as OptionValue<T>[],
+    [options]
+  );
+
+  const display: {
+    menu: FlexDisplay;
+    segmented: FlexDisplay;
+  } = useMemo(() => {
+    if (force === "menu") {
+      return { menu: "flex", segmented: "none" };
+    } else if (force === "segmented") {
+      return { menu: "none", segmented: "flex" };
+    } else {
+      return {
+        menu: { initial: "flex", md: "none" },
+        segmented: { initial: "none", md: "flex" }
+      };
+    }
+  }, [force]);
 
   return (
     <>
-      <Flex display={{ initial: "none", md: "flex" }}>
+      <Flex display={display.segmented}>
         <SegmentedControl.Root
           value={value}
           onValueChange={onChange}
@@ -45,9 +69,9 @@ export default function OptionComponent<T extends string>({
       <Flex
         direction="column"
         align="stretch"
-        style={{ flex: 1, minWidth: "120px" }}
+        style={{ flex: 1, minWidth: "200px" }}
         gap="1"
-        display={{ initial: "flex", md: "none" }}
+        display={display.menu}
       >
         {!hideLabel && (
           <Text size="1" weight="medium" as="label">

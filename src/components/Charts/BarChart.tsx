@@ -1,52 +1,41 @@
 import {
-  LineChart as LineChartRecharts,
-  XAxis,
+  BarChart as BarChartRecharts,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   Legend,
-  Line
+  Bar
 } from "recharts";
+import LegendChart from "./LegendChart";
 import TooltipChart from "./TooltipChart";
 import { useCallback } from "react";
-import LegendChart from "./LegendChart";
 
-export interface TimeLineChartProps {
-  data: Record<string, number[]>;
+export interface BarChartProps {
+  // data needs to be an array of objects to support multiple rows (Page A, Page B, etc.)
+  data: Record<string, number>;
   colors: Record<string, string>;
-  labels?: string[];
-  hideLabel?: boolean;
+  labels?: string[]; // e.g., ['Page A', 'Page B', 'Page C']
   showGrid?: boolean;
   formatter?: (value: number, percent: number) => string;
-  labelFormatter?: (label: string) => string;
 }
 
-export function TimeLineChart({
+export function BarChart({
   data,
   colors,
-  labels,
+  // labels,
   showGrid,
-  formatter,
-  labelFormatter
-}: TimeLineChartProps) {
-  const keys = Object.keys(data).sort((a, b) => {
-    const totalA = data[a].reduce((sum, v) => sum + v, 0);
-    const totalB = data[b].reduce((sum, v) => sum + v, 0);
-
-    return totalB - totalA;
-  });
-  const length = Math.max(
-    0,
-    ...Object.values(data).map((values) => values.length)
-  );
-  const chartData = Array.from({ length }, (_, index) => {
-    const label = labels?.[index] ?? String(index + 1);
-    return {
-      label,
-      ...Object.fromEntries(keys.map((key) => [key, data[key][index] ?? 0]))
-    };
-  });
+  formatter
+}: BarChartProps) {
+  const keys = Object.keys(data);
+  const chartData = [
+    {
+      label: "PPP",
+      ...data
+    }
+  ];
+  /* console.log(data);
+  console.log(keys); */
 
   const valueFormatter = useCallback(
     (value: number, percent: number) => {
@@ -60,21 +49,15 @@ export function TimeLineChart({
 
   return (
     <ResponsiveContainer width="100%" height={320}>
-      <LineChartRecharts
-        responsive
-        data={chartData}
-        margin={{ top: 20, right: 20, left: 20, bottom: 5 }}
-        style={{ flex: 1 }}
-      >
+      <BarChartRecharts responsive data={chartData} style={{ flex: 1 }}>
         {showGrid && (
           <CartesianGrid stroke="var(--gray-9)" strokeDasharray="3 3" />
         )}
-
-        <XAxis
+        {/* <XAxis
           dataKey="label"
           stroke="var(--gray-12)"
           tick={{ fill: "var(--gray-12)", fontSize: 12 }}
-        />
+        /> */}
 
         <YAxis
           width="auto"
@@ -91,16 +74,15 @@ export function TimeLineChart({
           height="auto"
           content={LegendChart}
           wrapperStyle={{
-            width: "100%"
+            width: "100%",
+            paddingTop: "var(--space-2)"
           }}
           formatter={undefined}
         />
 
         <Tooltip
+          cursor={false}
           content={TooltipChart}
-          labelFormatter={(label, _payload) =>
-            labelFormatter ? labelFormatter(label) : label
-          }
           formatter={(value, _name, entry) => {
             const payload = entry?.payload as { percent?: number };
             return valueFormatter(value as number, payload?.percent ?? 0);
@@ -108,29 +90,24 @@ export function TimeLineChart({
         />
 
         {keys.map((dataKey) => (
-          <Line
+          <Bar
             key={dataKey}
-            type="monotone"
             dataKey={dataKey}
-            stroke={
+            fill={
               colors[dataKey] !== "transparent"
                 ? `var(--${colors[dataKey]}-9)`
                 : "var(--gray-12)"
             }
-            strokeWidth={3}
-            // strokeDasharray="1 1"
-            dot={{
-              fill:
-                colors[dataKey] !== "transparent"
-                  ? `var(--${colors[dataKey]}-9)`
-                  : "var(--gray-12)"
+            label={{
+              position: "top",
+              fill: "var(--gray-12)",
+              fontWeight: "var(--font-weight-bold)",
+
+              formatter: (value) => valueFormatter(value as number, 0)
             }}
-            activeDot={{ r: 5 }}
-            animationDuration={350}
-            animationBegin={0}
           />
         ))}
-      </LineChartRecharts>
+      </BarChartRecharts>
     </ResponsiveContainer>
   );
 }

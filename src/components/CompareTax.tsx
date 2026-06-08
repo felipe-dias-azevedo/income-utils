@@ -3,7 +3,6 @@ import {
   Text,
   Flex,
   Grid,
-  Card,
   Heading,
   Box,
   Switch,
@@ -32,6 +31,7 @@ import {
 import NumericLabeledInput from "./NumericLabeledInput";
 import { InfoCircledIcon, PieChartIcon } from "@radix-ui/react-icons";
 import { TaxResultCard } from "./TaxResultCard";
+import ContentCard from "./Common/ContentCard";
 
 export interface CompareTaxProps {
   enableDoubleCompare: boolean;
@@ -114,91 +114,87 @@ export function CompareTax({
 
   return (
     <Flex gap="4" direction="column">
-      <Card style={{ padding: "0" }}>
-        <Flex p="4" gap="4" direction="column">
-          <Flex
-            justify="between"
-            gap="4"
-            direction={{ initial: "column", sm: "row" }}
-          >
-            <Box>
-              <Heading size="5">Calcular Salário Líquido</Heading>
-              <Text size="2">
-                Compare seu salário mensal líquido entre 2025 e 2026.
-              </Text>
-            </Box>
+      {/* TODO: add "nav bar" to salario/PLR */}
+      <ContentCard p="4" gap="4" direction="column">
+        <Flex
+          justify="between"
+          gap="4"
+          direction={{ initial: "column", sm: "row" }}
+        >
+          <Box>
+            <Heading size="5">Calcular Salário Líquido</Heading>
+            <Text size="2">
+              Compare seu salário mensal líquido entre 2025 e 2026.
+            </Text>
+          </Box>
 
-            {enableDualCompare && (
-              <Text as="label" size="2">
-                <Flex gap="2">
-                  <Switch
-                    checked={doubleCompare}
-                    onCheckedChange={handleSetDoubleCompare}
-                  />{" "}
-                  {/* TODO: Improve label */}
-                  Comparar dois salários
-                </Flex>
-              </Text>
-            )}
-          </Flex>
+          {enableDualCompare && (
+            <Text as="label" size="2">
+              <Flex gap="2">
+                <Switch
+                  checked={doubleCompare}
+                  onCheckedChange={handleSetDoubleCompare}
+                />{" "}
+                {/* TODO: Improve label */}
+                Comparar dois salários
+              </Flex>
+            </Text>
+          )}
+        </Flex>
 
-          <Flex gap="5">
+        <Flex gap="5">
+          <NumericLabeledInput
+            label={
+              doubleCompare
+                ? "Salário Mensal Bruto 2025"
+                : "Salário Mensal Bruto"
+            }
+            prefix="R$"
+            placeholder="Ex: 3.000,00"
+            value={gross}
+            onChange={(e) => {
+              const v = formatCurrencyInput(e.target.value);
+              setGross(v);
+              saveStringToLocalStorage(GROSS_STORAGE, v);
+            }}
+          />
+          {doubleCompare && (
             <NumericLabeledInput
-              label={
-                doubleCompare
-                  ? "Salário Mensal Bruto 2025"
-                  : "Salário Mensal Bruto"
-              }
+              label="Salário Mensal Bruto 2026"
               prefix="R$"
               placeholder="Ex: 3.000,00"
-              value={gross}
+              value={gross2}
               onChange={(e) => {
                 const v = formatCurrencyInput(e.target.value);
-                setGross(v);
-                saveStringToLocalStorage(GROSS_STORAGE, v);
+                setGross2(v);
+                saveStringToLocalStorage(GROSS2_STORAGE, v);
               }}
             />
-            {doubleCompare && (
-              <NumericLabeledInput
-                label="Salário Mensal Bruto 2026"
-                prefix="R$"
-                placeholder="Ex: 3.000,00"
-                value={gross2}
-                onChange={(e) => {
-                  const v = formatCurrencyInput(e.target.value);
-                  setGross2(v);
-                  saveStringToLocalStorage(GROSS2_STORAGE, v);
-                }}
-              />
-            )}
-          </Flex>
-
-          <Flex direction="column" gap="2">
-            <Text size="2">Comparar com:</Text>
-            <CheckboxCards.Root
-              size="1"
-              columns="2"
-              variant="surface"
-              value={comparingTaxes}
-              onValueChange={(e) => {
-                setComparingTaxes(e);
-                saveStringListToLocalStorage(COMPARING_TAXES_STORAGE, e);
-              }}
-            >
-              <CheckboxCards.Item
-                value="2026"
-                disabled
-                className="checkbox-card"
-              >
-                2026
-              </CheckboxCards.Item>
-              <CheckboxCards.Item value="2025" className="checkbox-card">
-                2025
-              </CheckboxCards.Item>
-            </CheckboxCards.Root>
-          </Flex>
+          )}
         </Flex>
-      </Card>
+
+        <Flex direction="column" gap="2">
+          {/* TODO: add option to select to include Vale Transporte */}
+          <Text size="2">Comparar com:</Text>
+          <CheckboxCards.Root
+            size="1"
+            columns="2"
+            variant="surface"
+            value={comparingTaxes}
+            onValueChange={(e) => {
+              setComparingTaxes(e);
+              saveStringListToLocalStorage(COMPARING_TAXES_STORAGE, e);
+            }}
+          >
+            <CheckboxCards.Item value="2026" disabled className="checkbox-card">
+              2026
+            </CheckboxCards.Item>
+            <CheckboxCards.Item value="2025" className="checkbox-card">
+              2025
+            </CheckboxCards.Item>
+          </CheckboxCards.Root>
+        </Flex>
+      </ContentCard>
 
       {grossValue > 0 && (
         <>
@@ -284,46 +280,44 @@ export function CompareTax({
 
       <Separator orientation="horizontal" style={{ width: "100%" }} />
 
-      <Card style={{ padding: "0" }}>
-        <Flex p="4" gap="4" direction="column">
-          <Flex
-            justify="between"
-            gap="4"
-            direction={{ initial: "column", md: "row" }}
-          >
-            <Box>
-              <Heading size="5">Calcular PLR Líquido</Heading>
-              <Text size="2">
-                Calcule o imposto sobre Participação nos Lucros ou Resultados
-                (PLR).
-              </Text>
-            </Box>
-            <Callout.Root variant="surface" size="1">
-              <Callout.Icon>
-                <InfoCircledIcon />
-              </Callout.Icon>
-              <Callout.Text>
-                {/* TODO: align center text */}
-                Imposto sobre PLR não foi alterado para 2026
-              </Callout.Text>
-            </Callout.Root>
-          </Flex>
-
-          <Flex gap="5">
-            <NumericLabeledInput
-              label="PLR Anual Bruto"
-              prefix="R$"
-              placeholder="Ex: 3.000,00"
-              value={grossBonus}
-              onChange={(e) => {
-                const v = formatCurrencyInput(e.target.value);
-                setGrossBonus(v);
-                saveStringToLocalStorage(BONUS_STORAGE, v);
-              }}
-            />
-          </Flex>
+      <ContentCard p="4" gap="4" direction="column">
+        <Flex
+          justify="between"
+          gap="4"
+          direction={{ initial: "column", md: "row" }}
+        >
+          <Box>
+            <Heading size="5">Calcular PLR Líquido</Heading>
+            <Text size="2">
+              Calcule o imposto sobre Participação nos Lucros ou Resultados
+              (PLR).
+            </Text>
+          </Box>
+          <Callout.Root variant="surface" size="1">
+            <Callout.Icon>
+              <InfoCircledIcon />
+            </Callout.Icon>
+            <Callout.Text>
+              {/* TODO: align center text */}
+              Imposto sobre PLR não foi alterado para 2026
+            </Callout.Text>
+          </Callout.Root>
         </Flex>
-      </Card>
+
+        <Flex gap="5">
+          <NumericLabeledInput
+            label="PLR Anual Bruto"
+            prefix="R$"
+            placeholder="Ex: 3.000,00"
+            value={grossBonus}
+            onChange={(e) => {
+              const v = formatCurrencyInput(e.target.value);
+              setGrossBonus(v);
+              saveStringToLocalStorage(BONUS_STORAGE, v);
+            }}
+          />
+        </Flex>
+      </ContentCard>
 
       {grossBonusValue > 0 && (
         <TaxResultCard

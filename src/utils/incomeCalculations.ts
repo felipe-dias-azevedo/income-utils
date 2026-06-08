@@ -29,6 +29,10 @@ function calculateHourly(value: number, workweekHours: number): number {
   return value / 52 / 5 / workweekHours;
 }
 
+function calculateOvertimeHour(monthly: number, workweekHours: number): number {
+  return monthly / (workweekHours * 5);
+}
+
 export function computeBonus(
   grossBonus: number,
   taxCalculator: TaxTableStrategy
@@ -106,6 +110,13 @@ export function computeIncome(
     netYear + benefitsYear,
     workweekHours
   );
+  const overtimeHour = calculateOvertimeHour(grossMonth, workweekHours * 5);
+
+  // Monthly total
+  const grossMonthTotal = grossYearPlusBonus / 12;
+  const grossMonthTotalPlusBenefits = grossYearPlusBonusPlusBenefits / 12;
+  const netMonthTotal = netYearPlusBonus / 12;
+  const netMonthTotalPlusBenefits = netYearPlusBonusPlusBenefits / 12;
 
   return {
     ...entry,
@@ -131,6 +142,11 @@ export function computeIncome(
     grossHour,
     grossHourPlusBenefits,
     netHour,
-    netHourPlusBenefits
+    netHourPlusBenefits,
+    overtimeHour,
+    grossMonthTotal,
+    grossMonthTotalPlusBenefits,
+    netMonthTotal,
+    netMonthTotalPlusBenefits
   };
 }
