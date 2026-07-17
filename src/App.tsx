@@ -125,7 +125,7 @@ export default function App() {
                     }}
                   >
                     <ArrowUpIcon />
-                    Juros Compostos
+                    Viver de Renda
                   </DropdownMenu.Item>
                   <DropdownMenu.Item
                     onSelect={() => {

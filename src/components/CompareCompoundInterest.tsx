@@ -1,8 +1,12 @@
-import { useMemo } from "react";
-import { Box, Flex, Heading, Text } from "@radix-ui/themes";
+import { useEffect, useMemo, useState } from "react";
+import { Box, Flex, Heading, Separator, Text } from "@radix-ui/themes";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  loadStringFromLocalStorage,
+  saveStringToLocalStorage
+} from "../utils/storage";
 import {
   formatCurrency,
   formatCurrencyInput,
@@ -17,6 +21,7 @@ import RangeSlider from "./Common/RangeSlider";
 import { TimeLineChart } from "./Charts/LineChart";
 import NumericLabeledInput from "./NumericLabeledInput";
 import ContentCard from "./Common/ContentCard";
+import { TextNumeric } from "./Common/TextNumeric";
 
 const compoundInterestSchema = z.object({
   initialValue: z
@@ -76,6 +81,29 @@ const compoundInterestSchema = z.object({
 type CompoundInterestFormValues = z.infer<typeof compoundInterestSchema>;
 
 export default function CompareCompoundInterest() {
+  const INITIAL_VALUE_STORAGE = "live_off_investments_initial_value";
+  const MONTHLY_CONTRIBUTION_STORAGE =
+    "live_off_investments_monthly_contribution";
+  const INTEREST_RATE_STORAGE = "live_off_investments_interest_rate";
+  const PERIOD_AMOUNT_STORAGE = "live_off_investments_period_amount";
+  const INFLATION_RATE_STORAGE = "live_off_investments_inflation_rate";
+
+  const getStoredValue = (key: string, fallback: string) =>
+    loadStringFromLocalStorage(key, fallback) ?? fallback;
+
+  const [defaultValues] = useState<CompoundInterestFormValues>(() => ({
+    initialValue: getStoredValue(
+      INITIAL_VALUE_STORAGE,
+      formatCurrencyInput("0")
+    ),
+    monthlyContribution: getStoredValue(MONTHLY_CONTRIBUTION_STORAGE, ""),
+    interestRate: getStoredValue(INTEREST_RATE_STORAGE, "10"),
+    periodAmount: getStoredValue(PERIOD_AMOUNT_STORAGE, "10"),
+    periodType: "years",
+    inflationRate: getStoredValue(INFLATION_RATE_STORAGE, "5.5"),
+    inflationRateType: "annual"
+  }));
+
   const {
     control,
     watch,
@@ -83,15 +111,7 @@ export default function CompareCompoundInterest() {
   } = useForm<CompoundInterestFormValues>({
     mode: "onChange",
     reValidateMode: "onChange",
-    defaultValues: {
-      initialValue: formatCurrencyInput("0"),
-      monthlyContribution: "",
-      interestRate: "10",
-      periodAmount: "10",
-      periodType: "years",
-      inflationRate: "5.5",
-      inflationRateType: "annual"
-    },
+    defaultValues,
     resolver: zodResolver(compoundInterestSchema)
   });
 
@@ -101,6 +121,29 @@ export default function CompareCompoundInterest() {
   const periodAmount = watch("periodAmount");
   const periodType = watch("periodType");
   const inflationRate = watch("inflationRate");
+
+  useEffect(() => {
+    saveStringToLocalStorage(INITIAL_VALUE_STORAGE, initialValue ?? "");
+  }, [initialValue]);
+
+  useEffect(() => {
+    saveStringToLocalStorage(
+      MONTHLY_CONTRIBUTION_STORAGE,
+      monthlyContribution ?? ""
+    );
+  }, [monthlyContribution]);
+
+  useEffect(() => {
+    saveStringToLocalStorage(INTEREST_RATE_STORAGE, interestRate ?? "");
+  }, [interestRate]);
+
+  useEffect(() => {
+    saveStringToLocalStorage(PERIOD_AMOUNT_STORAGE, periodAmount ?? "");
+  }, [periodAmount]);
+
+  useEffect(() => {
+    saveStringToLocalStorage(INFLATION_RATE_STORAGE, inflationRate ?? "");
+  }, [inflationRate]);
 
   const compoundResult = useMemo(() => {
     if (!isValid) return null;
@@ -313,54 +356,76 @@ export default function CompareCompoundInterest() {
       {/* TODO: show amount of interest monthly of final value and inflation adjusted */}
       {/* TODO: show amount of interest yearly of final value and inflation adjusted */}
       {/* TODO: if period less than equal of 4 years, show chart in monthly */}
+      {/* TODO: add option to save the result to compare with others calculations */}
 
       {compoundResult && inflationAdjustedResult && (
         <>
-          <Flex gap="4" direction={{ initial: "column", md: "row" }}>
-            <ContentCard>
-              <Text size="2" color="gray">
-                Valor total final
-              </Text>
-              <Heading size="4">
-                {formatCurrency(compoundResult.totalFinal)}
-              </Heading>
-            </ContentCard>
-            <ContentCard>
+          <Flex
+            gap="4"
+            wrap="wrap"
+            /* direction={{ initial: "column", md: "row" }} */
+            direction="row"
+            justify="center"
+          >
+            <ContentCard gap="0">
               <Text size="2" color="gray">
                 Valor total investido
               </Text>
-              <Heading size="4">
+              <TextNumeric
+                key={compoundResult.totalInvested}
+                weight="medium"
+                size="4"
+                animate
+              >
                 {formatCurrency(compoundResult.totalInvested)}
-              </Heading>
+              </TextNumeric>
             </ContentCard>
-            <ContentCard>
+            <ContentCard gap="0">
               <Text size="2" color="gray">
                 Total em juros
               </Text>
-              <Heading size="4">
+              <TextNumeric
+                key={compoundResult.totalInterest}
+                weight="medium"
+                size="4"
+                animate
+              >
                 {formatCurrency(compoundResult.totalInterest)}
-              </Heading>
+              </TextNumeric>
             </ContentCard>
-          </Flex>
 
-          <Flex gap="4" direction={{ initial: "column", md: "row" }}>
-            <ContentCard>
-              <Text size="2" color="gray">
-                Valor final (ajustado à inflação)
-              </Text>
-              <Heading size="4">
-                {formatCurrency(inflationAdjustedResult.inflationAdjustedFinal)}
-              </Heading>
-            </ContentCard>
-            <ContentCard>
-              <Text size="2" color="gray">
-                Juros totais (ajustado à inflação)
-              </Text>
-              <Heading size="4">
-                {formatCurrency(
-                  inflationAdjustedResult.inflationAdjustedInterest
-                )}
-              </Heading>
+            <ContentCard gap="2">
+              <Flex direction="column" align="end">
+                <Text size="2" color="gray">
+                  Valor total final
+                </Text>
+                <TextNumeric
+                  key={compoundResult.totalFinal}
+                  weight="medium"
+                  size="4"
+                  animate
+                >
+                  {formatCurrency(compoundResult.totalFinal)}
+                </TextNumeric>
+              </Flex>
+
+              <Separator orientation="horizontal" style={{ width: "100%" }} />
+
+              <Flex direction="column" align="end">
+                <Text size="2" color="gray">
+                  Ajustado à inflação
+                </Text>
+                <TextNumeric
+                  key={inflationAdjustedResult.inflationAdjustedFinal}
+                  weight="medium"
+                  size="4"
+                  animate
+                >
+                  {formatCurrency(
+                    inflationAdjustedResult.inflationAdjustedFinal
+                  )}
+                </TextNumeric>
+              </Flex>
             </ContentCard>
           </Flex>
 

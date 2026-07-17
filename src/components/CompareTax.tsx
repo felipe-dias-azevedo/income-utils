@@ -32,6 +32,7 @@ import NumericLabeledInput from "./NumericLabeledInput";
 import { InfoCircledIcon, PieChartIcon } from "@radix-ui/react-icons";
 import { TaxResultCard } from "./TaxResultCard";
 import ContentCard from "./Common/ContentCard";
+import { TextNumeric } from "./Common/TextNumeric";
 
 export interface CompareTaxProps {
   enableDoubleCompare: boolean;
@@ -214,23 +215,24 @@ export function CompareTax({
               //style={{ width: "100%" }}
               >
                 <Text size="2">Comparação de 2025 para 2026: </Text>
-                <Text
+                <TextNumeric
                   size="2"
                   weight="bold"
-                  key={compareAbsolute}
-                  className="valuechange-animated"
+                  key={`compare2025-${compareAbsolute}`}
+                  animate
                 >
                   {compareAbsolute > 0 ? "+" : <>&minus;</>}
                   {formatCurrency(Math.abs(compareAbsolute))}
-                </Text>
-                <Text
+                </TextNumeric>
+                {" "}
+                <TextNumeric
                   size="2"
-                  key={comparePercentage}
-                  className="valuechange-animated"
+                  key={`comparePercentage2025-${comparePercentage}`}
+                  animate
                 >
-                  {" "}
+
                   ({comparePercentage})
-                </Text>
+                </TextNumeric>
               </Callout.Text>
             </Callout.Root>
           )}

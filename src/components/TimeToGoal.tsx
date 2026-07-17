@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Flex, Heading, Text } from "@radix-ui/themes";
+import { Box, Flex, Heading, Separator, Text } from "@radix-ui/themes";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  loadStringFromLocalStorage,
+  saveStringToLocalStorage
+} from "../utils/storage";
 import {
   formatCurrency,
   formatCurrencyInput,
@@ -73,6 +77,27 @@ type TimeToGoalFormValues = z.infer<typeof timeToGoalSchema>;
 type TimeToGoalMode = keyof typeof TIME_TO_GOAL_MODE_OPTIONS;
 
 export default function TimeToGoal() {
+  const INITIAL_VALUE_STORAGE = "live_off_investments_initial_value";
+  const MONTHLY_CONTRIBUTION_STORAGE =
+    "live_off_investments_monthly_contribution";
+  const INTEREST_RATE_STORAGE = "live_off_investments_interest_rate";
+
+  const getStoredValue = (key: string, fallback: string) =>
+    loadStringFromLocalStorage(key, fallback) ?? fallback;
+
+  const [defaultValues] = useState<TimeToGoalFormValues>(() => ({
+    initialValue: getStoredValue(
+      INITIAL_VALUE_STORAGE,
+      formatCurrencyInput("0")
+    ),
+    monthlyContribution: getStoredValue(
+      MONTHLY_CONTRIBUTION_STORAGE,
+      formatCurrencyInput("0")
+    ),
+    sliderValue: "100000",
+    interestRate: getStoredValue(INTEREST_RATE_STORAGE, "10")
+  }));
+
   const {
     control,
     watch,
@@ -81,12 +106,7 @@ export default function TimeToGoal() {
   } = useForm<TimeToGoalFormValues>({
     mode: "onChange",
     reValidateMode: "onChange",
-    defaultValues: {
-      initialValue: formatCurrencyInput("0"),
-      monthlyContribution: formatCurrencyInput("0"),
-      sliderValue: "100000",
-      interestRate: "10"
-    },
+    defaultValues,
     resolver: zodResolver(timeToGoalSchema)
   });
 
@@ -95,6 +115,21 @@ export default function TimeToGoal() {
   const sliderValue = watch("sliderValue");
   const interestRate = watch("interestRate");
   const [mode, setMode] = useState<TimeToGoalMode>("goal");
+
+  useEffect(() => {
+    saveStringToLocalStorage(INITIAL_VALUE_STORAGE, initialValue ?? "");
+  }, [initialValue]);
+
+  useEffect(() => {
+    saveStringToLocalStorage(
+      MONTHLY_CONTRIBUTION_STORAGE,
+      monthlyContribution ?? ""
+    );
+  }, [monthlyContribution]);
+
+  useEffect(() => {
+    saveStringToLocalStorage(INTEREST_RATE_STORAGE, interestRate ?? "");
+  }, [interestRate]);
 
   useEffect(() => {
     const currentValue = Number(sliderValue);
@@ -160,7 +195,7 @@ export default function TimeToGoal() {
 
   return (
     <Flex gap="4" direction="column">
-      <ContentCard>
+      <ContentCard p="4" gap="4" direction="column">
         <Box>
           <Heading size="5">Calcular tempo até a meta</Heading>
           <Text size="2">
@@ -294,48 +329,61 @@ export default function TimeToGoal() {
       </ContentCard>
 
       {result && (
-        <Flex gap="4" direction={{ initial: "column", md: "row" }} wrap="wrap">
-          <ContentCard>
-            <Text size="2" color="gray">
-              Meses até a meta
-            </Text>
-            <TextNumeric weight="bold" key={result.totalMonths} animate>
-              {formatNumber(result.totalMonths)}
-            </TextNumeric>
-          </ContentCard>
-
-          <ContentCard style={{ flex: 1 }}>
+        <Flex
+          gap="4"
+          /* direction={{ initial: "column", md: "row" }} */
+          wrap="wrap"
+          direction="row"
+          justify="center"
+        >
+          <ContentCard gap="0">
             <Text size="2" color="gray">
               Anos até a meta
             </Text>
-            <TextNumeric weight="bold" key={result.totalYears} animate>
-              {result.totalYears.toFixed(2)}
-            </TextNumeric>
+            <Flex gap="1">
+              <TextNumeric
+                weight="medium"
+                key={`years-${result.totalYears}`}
+                animate
+              >
+                {result.totalYears} Anos
+              </TextNumeric>
+
+              {result.totalMonthsAfterYears > 0 && (
+                <TextNumeric
+                  weight="medium"
+                  key={`months-${result.totalMonthsAfterYears}`}
+                  animate
+                >
+                  {result.totalMonthsAfterYears} Meses
+                </TextNumeric>
+              )}
+            </Flex>
           </ContentCard>
 
-          <ContentCard style={{ flex: 1 }}>
+          <ContentCard gap="0">
             <Text size="2" color="gray">
               Valor final
             </Text>
-            <TextNumeric weight="bold" key={result.totalFinal} animate>
+            <TextNumeric weight="medium" key={result.totalFinal} animate>
               {formatCurrency(result.totalFinal)}
             </TextNumeric>
           </ContentCard>
 
-          <ContentCard style={{ flex: 1 }}>
+          <ContentCard gap="0">
             <Text size="2" color="gray">
               Total investido
             </Text>
-            <TextNumeric weight="bold" key={result.totalInvested} animate>
+            <TextNumeric weight="medium" key={result.totalInvested} animate>
               {formatCurrency(result.totalInvested)}
             </TextNumeric>
           </ContentCard>
 
-          <ContentCard style={{ flex: 1 }}>
+          <ContentCard gap="0">
             <Text size="2" color="gray">
               Juros totais
             </Text>
-            <TextNumeric weight="bold" key={result.totalInterest} animate>
+            <TextNumeric weight="medium" key={result.totalInterest} animate>
               {formatCurrency(result.totalInterest)}
             </TextNumeric>
           </ContentCard>

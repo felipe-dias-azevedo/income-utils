@@ -20,7 +20,7 @@ export function TextNumeric({
         fontFeatureSettings: "tnum",
         ...style
       }}
-      className={animate ? "valuechange-animated" : undefined}
+      className={animate ? "digit-animated" : undefined}
     >
       {children}
     </Text>

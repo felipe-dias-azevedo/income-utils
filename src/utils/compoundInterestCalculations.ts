@@ -46,6 +46,7 @@ export interface CompoundInterestYieldInput {
 export interface CompoundInterestGoalResult {
   totalMonths: number;
   totalYears: number;
+  totalMonthsAfterYears: number;
   totalFinal: number;
   totalInvested: number;
   totalInterest: number;
@@ -282,7 +283,8 @@ export function calculateTimeToGoal(
 
   return {
     totalMonths,
-    totalYears: totalMonths / 12,
+    totalYears: Math.floor(totalMonths / 12),
+    totalMonthsAfterYears: Math.floor(totalMonths % 12),
     totalFinal: roundCurrency(totalFinal),
     totalInvested: roundCurrency(totalInvested),
     totalInterest: roundCurrency(totalFinal - totalInvested),
@@ -299,9 +301,8 @@ export function calculateTimeToGoal(
 export function calculateTimeToYield(
   input: CompoundInterestYieldInput
 ): CompoundInterestGoalResult {
-  // Per user's requirement: use simple division to get monthly rate (annual / 12)
-  // TODO: change to calculate using this formula {Taxa a.m.} = (1 + {Taxa a.a.})^{\frac{1}{12}} - 1$$
-  const monthlyRate = input.annualInterestRate / 12 / 100;
+  // Convert annual effective rate (%) to monthly effective rate (decimal)
+  const monthlyRate = Math.pow(1 + input.annualInterestRate / 100, 1 / 12) - 1;
   const targetMonthlyInterest = input.targetMonthlyInterest;
 
   if (targetMonthlyInterest <= 0) {
@@ -329,7 +330,8 @@ export function calculateTimeToYield(
 
     return {
       totalMonths,
-      totalYears: totalMonths / 12,
+      totalYears: Math.round(totalMonths / 12),
+      totalMonthsAfterYears: totalMonths % 12,
       totalFinal: roundCurrency(totalFinal),
       totalInvested: roundCurrency(totalInvested),
       totalInterest: roundCurrency(totalFinal - totalInvested),
@@ -362,7 +364,8 @@ export function calculateTimeToYield(
 
   return {
     totalMonths,
-    totalYears: totalMonths / 12,
+    totalYears: Math.round(totalMonths / 12),
+    totalMonthsAfterYears: totalMonths % 12,
     totalFinal: roundCurrency(totalFinal),
     totalInvested: roundCurrency(totalInvested),
     totalInterest: roundCurrency(totalFinal - totalInvested),
