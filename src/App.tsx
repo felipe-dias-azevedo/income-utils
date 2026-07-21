@@ -32,15 +32,15 @@ import AppUpdatedDate from "./components/AppUpdatedDate";
 import CompareCompoundInterest from "./components/CompareCompoundInterest";
 import TimeToGoal from "./components/TimeToGoal";
 import ContentCard from "./components/Common/ContentCard";
-import Test from "./components/Test";
+// import Test from "./components/Test";
 
 type Page =
   | "compareIncomes"
   | "compareTaxes"
   | "compareFinancings"
   | "compareCompoundInterest"
-  | "timeToGoal"
-  | "test"; //TODO: remove test page
+  | "timeToGoal";
+// | "test"; //TODO: remove test page
 const PAGE_STORAGE = "page";
 
 export default function App() {
@@ -137,17 +137,14 @@ export default function App() {
                     Meta
                   </DropdownMenu.Item>
 
-                  {/* TODO: remove test */}
-                  <DropdownMenu.Separator />
-
-                  <DropdownMenu.Item
+                  {/* <DropdownMenu.Item
                     onSelect={() => {
                       setPage("test");
                       saveStringToLocalStorage(PAGE_STORAGE, "test");
                     }}
                   >
                     Test
-                  </DropdownMenu.Item>
+                  </DropdownMenu.Item> */}
                 </DropdownMenu.Content>
               </DropdownMenu.Root>
               <AppUpdatedDate />
@@ -237,7 +234,7 @@ export default function App() {
 
             {page === "compareCompoundInterest" && <CompareCompoundInterest />}
             {page === "timeToGoal" && <TimeToGoal />}
-            {page === "test" && <Test />}
+            {/* {page === "test" && <Test />} */}
           </Flex>
         </Box>
       </Container>
