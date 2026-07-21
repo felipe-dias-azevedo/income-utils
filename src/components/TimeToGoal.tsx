@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Flex, Heading, Separator, Text } from "@radix-ui/themes";
+import { Box, Flex, Heading, Text } from "@radix-ui/themes";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,8 +11,7 @@ import {
   formatCurrency,
   formatCurrencyInput,
   parseCurrencyString,
-  formatPercentage,
-  formatNumber
+  formatPercentage
 } from "../utils/formatting";
 import {
   calculateTimeToGoal,
