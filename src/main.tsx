@@ -10,6 +10,7 @@ import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 import { AlertDialogProvider } from "./components/AlertDialog.tsx";
 import { IncomeProvider } from "./hooks/IncomeProvider.tsx";
+import { BrowserRouter } from "react-router-dom";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -17,7 +18,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <Theme panelBackground="translucent" radius="full" accentColor="blue">
         <AlertDialogProvider>
           <IncomeProvider>
-            <App />
+            <BrowserRouter basename={import.meta.env.BASE_URL}>
+              <App />
+            </BrowserRouter>
           </IncomeProvider>
         </AlertDialogProvider>
       </Theme>

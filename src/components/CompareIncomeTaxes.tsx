@@ -34,13 +34,13 @@ import { TaxResultCard } from "./TaxResultCard";
 import ContentCard from "./Common/ContentCard";
 import { TextNumeric } from "./Common/TextNumeric";
 
-export interface CompareTaxProps {
+export interface CompareIncomeTaxesProps {
   enableDoubleCompare: boolean;
 }
 
-export function CompareTax({
+export function CompareIncomeTaxes({
   enableDoubleCompare: enableDualCompare
-}: CompareTaxProps) {
+}: CompareIncomeTaxesProps) {
   const GROSS_STORAGE = "compare_tax_gross";
   const GROSS2_STORAGE = "compare_tax_gross2";
   const DOUBLE_COMPARE_STORAGE = "compare_tax_double";
@@ -223,14 +223,12 @@ export function CompareTax({
                 >
                   {compareAbsolute > 0 ? "+" : <>&minus;</>}
                   {formatCurrency(Math.abs(compareAbsolute))}
-                </TextNumeric>
-                {" "}
+                </TextNumeric>{" "}
                 <TextNumeric
                   size="2"
                   key={`comparePercentage2025-${comparePercentage}`}
                   animate
                 >
-
                   ({comparePercentage})
                 </TextNumeric>
               </Callout.Text>
