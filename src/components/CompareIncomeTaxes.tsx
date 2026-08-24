@@ -176,7 +176,7 @@ export function CompareIncomeTaxes({
 
         <Flex direction="column" gap="2">
           {/* TODO: add option to select to include Vale Transporte */}
-          <Text size="2">Comparar com:</Text>
+          <Text size="2">Comparar com base de cálculo:</Text>
           <CheckboxCards.Root
             size="1"
             columns="2"
@@ -201,7 +201,7 @@ export function CompareIncomeTaxes({
         <>
           {compare2025 && (
             <Callout.Root
-              variant="surface"
+              variant="soft"
               highContrast
               size="1"
               color={getPercentageColor(compareAbsolute > 0 ? "+" : "-")}
@@ -242,8 +242,7 @@ export function CompareIncomeTaxes({
             gap="4"
           >
             <TaxResultCard
-              heading="Resultado Salário"
-              subtitleText="2026"
+              heading={compare2025 ? "2026" : undefined}
               gross={net2026.grossMonth}
               net={net2026.netMonth}
               deductions={[
@@ -259,8 +258,7 @@ export function CompareIncomeTaxes({
 
             {compare2025 && (
               <TaxResultCard
-                heading="Resultado Salário"
-                subtitleText="2025"
+                heading="2025"
                 gross={net2025.grossMonth}
                 net={net2025.netMonth}
                 deductions={[
@@ -321,7 +319,6 @@ export function CompareIncomeTaxes({
 
       {grossBonusValue > 0 && (
         <TaxResultCard
-          heading="Resultado PLR"
           gross={net2026Bonus.grossBonus}
           net={net2026Bonus.netBonus}
           deductions={[{ label: "IR", value: net2026Bonus.irBonus }]}
