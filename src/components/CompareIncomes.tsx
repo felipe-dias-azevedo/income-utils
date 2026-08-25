@@ -48,6 +48,7 @@ import {
 import OptionComponent from "./OptionComponent";
 import LabelIcon from "./LabelIcon";
 import { TimeLineChart } from "./Charts/LineChart";
+import { IncomeDetails } from "./IncomeDetails";
 
 type CompareType = "percentage" | "absolute";
 type ViewType = "hora" | "mensal" | "total_mensal" | "anual";
@@ -226,6 +227,7 @@ export function CompareIncomes() {
       "percentage"
   );
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [detailsId, setDetailsId] = useState<number | null>(null);
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
   const [compareBaseId, setCompareBaseId] = useState<number | null>(() => {
@@ -247,6 +249,11 @@ export function CompareIncomes() {
   const editingIncome = useMemo(
     () => (editingId ? incomes.find((i) => i.id === editingId) : null),
     [editingId, incomes]
+  );
+
+  const detailsIncome = useMemo(
+    () => (detailsId ? incomes.find((i) => i.id === detailsId) : null),
+    [detailsId, incomes]
   );
 
   const showLiquido = useMemo(() => grossType === "net", [grossType]);
@@ -785,6 +792,11 @@ export function CompareIncomes() {
                               >
                                 <Pencil1Icon /> Editar
                               </DropdownMenu.Item>
+                              <DropdownMenu.Item
+                                onClick={() => setDetailsId(income.id)}
+                              >
+                                <InfoCircledIcon /> Ver detalhes
+                              </DropdownMenu.Item>
                               {compareBase?.id !== income.id && (
                                 <DropdownMenu.Item
                                   onClick={() =>
@@ -794,6 +806,7 @@ export function CompareIncomes() {
                                   <SliderIcon /> Comparar com este
                                 </DropdownMenu.Item>
                               )}
+                              <DropdownMenu.Separator />
                               <DropdownMenu.Item
                                 color="red"
                                 onClick={() => onDelete(income.id)}
@@ -809,6 +822,9 @@ export function CompareIncomes() {
                       <ContextMenu.Item onClick={() => setEditingId(income.id)}>
                         <Pencil1Icon /> Editar
                       </ContextMenu.Item>
+                      <ContextMenu.Item onClick={() => setDetailsId(income.id)}>
+                        <InfoCircledIcon /> Ver detalhes
+                      </ContextMenu.Item>
                       {compareBase?.id !== income.id && (
                         <ContextMenu.Item
                           onClick={() => handleSetCompareBaseId(income.id)}
@@ -817,6 +833,7 @@ export function CompareIncomes() {
                           Comparar com este
                         </ContextMenu.Item>
                       )}
+                      <ContextMenu.Separator />
                       <ContextMenu.Item
                         color="red"
                         onClick={() => onDelete(income.id)}
@@ -843,6 +860,19 @@ export function CompareIncomes() {
               initialData={{ ...editingIncome }}
               onSubmit={() => setEditingId(null)}
             />
+          </DialogPanel>
+        )}
+
+        {detailsIncome && detailsId !== null && (
+          <DialogPanel
+            open={detailsId !== null}
+            onOpenChange={(open) => {
+              if (!open) setDetailsId(null);
+            }}
+            title={detailsIncome.name}
+            description={detailsIncome.description}
+          >
+            <IncomeDetails income={detailsIncome} />
           </DialogPanel>
         )}
 

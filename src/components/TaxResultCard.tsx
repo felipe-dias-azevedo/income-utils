@@ -1,13 +1,10 @@
-import { Flex, Heading, Text, Separator } from "@radix-ui/themes";
-import { formatCurrency, formatPercentage } from "../utils/formatting";
+import { Flex, Heading } from "@radix-ui/themes";
+import { formatPercentage } from "../utils/formatting";
 import { PieChart } from "./Charts/PieChart";
-import { TextNumeric } from "./Common/TextNumeric";
 import ContentCard from "./Common/ContentCard";
+import { TaxResultDetails, type TaxResultValue } from "./TaxResultDetails";
 
-export interface TaxResultValue {
-  label: string;
-  value: number;
-}
+export type { TaxResultValue } from "./TaxResultDetails";
 
 export interface TaxResultCardProps {
   heading?: string;
@@ -36,49 +33,7 @@ export function TaxResultCard({
         {subtitleText && <Heading size="2">{subtitleText}</Heading>}
       </Flex>
 
-      <Flex
-        direction="column"
-        gap="1"
-        p="3"
-        style={{
-          boxShadow: "inset 0 0 0 1px var(--gray-a6)",
-          borderRadius: "var(--radius-4)",
-          backgroundColor: "var(--color-surface)"
-        }}
-      >
-        <Flex align="center" justify="between" gap="4">
-          <Text size="3">Valor Bruto: </Text>
-          <TextNumeric weight="bold" key={gross} animate>
-            {formatCurrency(gross)}
-          </TextNumeric>
-        </Flex>
-
-        {deductions.map((deduction, index) => (
-          <Flex key={index} align="center" justify="between" gap="4">
-            <Text size="3">{deduction.label}:</Text>
-            <TextNumeric
-              key={deduction.value}
-              color="red"
-              weight="bold"
-              animate
-            >
-              &minus; {formatCurrency(deduction.value)}
-            </TextNumeric>
-          </Flex>
-        ))}
-
-        <Separator
-          orientation="horizontal"
-          style={{ width: "100%", height: "1px" }}
-        />
-
-        <Flex align="center" justify="between" gap="4">
-          <Text size="3">Total Líquido: </Text>
-          <TextNumeric weight="bold" key={net} animate>
-            {formatCurrency(net)}
-          </TextNumeric>
-        </Flex>
-      </Flex>
+      <TaxResultDetails gross={gross} net={net} deductions={deductions} />
 
       {pieChartData && (
         <PieChart

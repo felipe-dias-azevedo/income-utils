@@ -6,6 +6,7 @@ import { Cross2Icon } from "@radix-ui/react-icons";
 interface DialogPanelProps {
   open: boolean;
   title: string;
+  description?: string;
   onOpenChange: (open: boolean) => void;
   children: ReactNode;
 }
@@ -13,6 +14,7 @@ interface DialogPanelProps {
 export function DialogPanel({
   open,
   title,
+  description,
   onOpenChange,
   children
 }: DialogPanelProps) {
@@ -20,7 +22,12 @@ export function DialogPanel({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content aria-describedby={undefined}>
         <Flex justify="between" align="start" mt="4" px="4">
-          <Dialog.Title>{title}</Dialog.Title>
+          <Flex gap="0" direction="column">
+            <Dialog.Title>{title}</Dialog.Title>
+            {description && (
+              <Dialog.Description>{description}</Dialog.Description>
+            )}
+          </Flex>
 
           <Dialog.Close>
             <IconButton size="3" variant="ghost">
