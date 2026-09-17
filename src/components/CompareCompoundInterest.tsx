@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Flex, Heading, Separator, Text } from "@radix-ui/themes";
+import { Box, Flex, Heading, Text } from "@radix-ui/themes";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,7 @@ import { TimeLineChart } from "./Charts/LineChart";
 import NumericLabeledInput from "./NumericLabeledInput";
 import ContentCard from "./Common/ContentCard";
 import { TextNumeric } from "./Common/TextNumeric";
+import { CompoundInterestResultDetails } from "./CompoundInterestResultDetails";
 
 const compoundInterestSchema = z.object({
   initialValue: z
@@ -202,6 +203,24 @@ export default function CompareCompoundInterest() {
     };
   }, [compoundResult, inflationAdjustedResult]);
 
+  const interestSummary = useMemo(() => {
+    if (!compoundResult || !inflationAdjustedResult) return null;
+
+    const months = Math.max(1, Number(periodAmount) * 12);
+    const years = Math.max(1, Number(periodAmount));
+
+    return {
+      monthly: {
+        final: compoundResult.totalInterest / months,
+        adjusted: inflationAdjustedResult.inflationAdjustedInterest / months
+      },
+      yearly: {
+        final: compoundResult.totalInterest / years,
+        adjusted: inflationAdjustedResult.inflationAdjustedInterest / years
+      }
+    };
+  }, [compoundResult, inflationAdjustedResult, periodAmount]);
+
   return (
     <Flex gap="4" direction="column">
       <ContentCard p="4" gap="4" direction="column">
@@ -273,7 +292,7 @@ export default function CompareCompoundInterest() {
                   onChange={(v) => field.onChange(String(v))}
                   min={6}
                   max={14}
-                  step={0.5}
+                  step={0.1}
                   leftLabel="Conservador"
                   rightLabel="Arrojado"
                   formatValue={(v) =>
@@ -332,7 +351,7 @@ export default function CompareCompoundInterest() {
                   onChange={(v) => field.onChange(String(v))}
                   min={3}
                   max={7}
-                  step={0.5}
+                  step={0.1}
                   leftLabel="Otimista"
                   rightLabel="Pessimista"
                   formatValue={(v) =>
@@ -353,81 +372,49 @@ export default function CompareCompoundInterest() {
 
       {/* TODO: alert if total invested < final value inflation adjusted */}
       {/* TODO: alert if total invested < final value inflation adjusted */}
-      {/* TODO: show amount of interest monthly of final value and inflation adjusted */}
-      {/* TODO: show amount of interest yearly of final value and inflation adjusted */}
       {/* TODO: if period less than equal of 4 years, show chart in monthly */}
       {/* TODO: add option to save the result to compare with others calculations */}
 
       {compoundResult && inflationAdjustedResult && (
         <>
-          <Flex
-            gap="4"
-            wrap="wrap"
-            /* direction={{ initial: "column", md: "row" }} */
-            direction="row"
-            justify="center"
-          >
-            <ContentCard gap="0">
-              <Text size="2" color="gray">
-                Valor total investido
-              </Text>
-              <TextNumeric
-                key={compoundResult.totalInvested}
-                weight="medium"
-                size="4"
-                animate
-              >
-                {formatCurrency(compoundResult.totalInvested)}
-              </TextNumeric>
-            </ContentCard>
-            <ContentCard gap="0">
-              <Text size="2" color="gray">
-                Total em juros
-              </Text>
-              <TextNumeric
-                key={compoundResult.totalInterest}
-                weight="medium"
-                size="4"
-                animate
-              >
-                {formatCurrency(compoundResult.totalInterest)}
-              </TextNumeric>
-            </ContentCard>
+          <ContentCard direction="column" gap="1" p="4">
+            <CompoundInterestResultDetails
+              totalInvested={compoundResult.totalInvested}
+              totalInterest={compoundResult.totalInterest}
+              totalFinal={compoundResult.totalFinal}
+              inflationAdjustedFinal={
+                inflationAdjustedResult.inflationAdjustedFinal
+              }
+              inflationImpact={
+                compoundResult.totalFinal -
+                inflationAdjustedResult.inflationAdjustedFinal
+              }
+            />
+          </ContentCard>
 
-            <ContentCard gap="2">
-              <Flex direction="column" align="end">
+          {interestSummary && (
+            <Flex direction="row" justify="center" gap="2">
+              <ContentCard gap="0">
                 <Text size="2" color="gray">
-                  Valor total final
+                  Juros finais por mês
                 </Text>
-                <TextNumeric
-                  key={compoundResult.totalFinal}
-                  weight="medium"
-                  size="4"
-                  animate
-                >
-                  {formatCurrency(compoundResult.totalFinal)}
+
+                <TextNumeric align="right" weight="medium" animate>
+                  {formatCurrency(interestSummary.monthly.final)}
                 </TextNumeric>
-              </Flex>
+              </ContentCard>
 
-              <Separator orientation="horizontal" style={{ width: "100%" }} />
-
-              <Flex direction="column" align="end">
+              <ContentCard gap="0">
                 <Text size="2" color="gray">
-                  Ajustado à inflação
+                  Juros finais por ano
                 </Text>
-                <TextNumeric
-                  key={inflationAdjustedResult.inflationAdjustedFinal}
-                  weight="medium"
-                  size="4"
-                  animate
-                >
-                  {formatCurrency(
-                    inflationAdjustedResult.inflationAdjustedFinal
-                  )}
+
+                <TextNumeric align="right" weight="medium" animate>
+                  {formatCurrency(interestSummary.yearly.final)}
                 </TextNumeric>
-              </Flex>
-            </ContentCard>
-          </Flex>
+              </ContentCard>
+            </Flex>
+          )}
 
           <ContentCard p="4" direction="column" gap="4">
             <Flex justify="between" align="center">

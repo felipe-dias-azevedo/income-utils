@@ -43,6 +43,16 @@ export interface CompoundInterestYieldInput {
   periodType: CompoundInterestPeriodType;
 }
 
+export interface PassiveIncomeInput {
+  monthlyContribution: number;
+  targetMonthlyIncome: number;
+  interestRate: number;
+  interestRateType: CompoundInterestRateType;
+  inflationRate: number;
+  inflationRateType: CompoundInterestRateType;
+  periodType: CompoundInterestPeriodType;
+}
+
 export interface CompoundInterestGoalResult {
   totalMonths: number;
   totalYears: number;
@@ -377,6 +387,63 @@ export function calculateTimeToYield(
       input.periodType
     )
   };
+}
+
+export function calculateTimeToPassiveIncome(
+  input: PassiveIncomeInput
+): CompoundInterestGoalResult {
+  const monthlyRate = getMonthlyRate(
+    input.interestRate,
+    input.interestRateType
+  );
+  const inflationMonthlyRate = getMonthlyRate(
+    input.inflationRate,
+    input.inflationRateType
+  );
+
+  if (input.targetMonthlyIncome <= 0 || monthlyRate <= 0) {
+    throw new Error("Target amount unreachable");
+  }
+
+  let totalMonths = 0;
+  const maxMonths = 1200;
+
+  while (totalMonths <= maxMonths) {
+    const totalFinal = calculateFutureValue(
+      0,
+      input.monthlyContribution,
+      monthlyRate,
+      totalMonths
+    );
+    const monthlyInterest = totalFinal * monthlyRate;
+    const inflationAdjustedTarget =
+      input.targetMonthlyIncome *
+      Math.pow(1 + inflationMonthlyRate, totalMonths);
+
+    if (monthlyInterest >= inflationAdjustedTarget) {
+      const totalInvested = input.monthlyContribution * totalMonths;
+
+      return {
+        totalMonths,
+        totalYears: Math.floor(totalMonths / 12),
+        totalMonthsAfterYears: totalMonths % 12,
+        totalFinal: roundCurrency(totalFinal),
+        totalInvested: roundCurrency(totalInvested),
+        totalInterest: roundCurrency(totalFinal - totalInvested),
+        timeline: buildTimeline(
+          0,
+          input.monthlyContribution,
+          monthlyRate,
+          totalMonths,
+          input.periodType
+        )
+      };
+    }
+
+    totalMonths += 1;
+  }
+
+  throw new Error("Target amount unreachable");
 }
 
 export function calculateInflationAdjustedResult(

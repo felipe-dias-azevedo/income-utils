@@ -28,13 +28,16 @@ const CompareCompoundInterest = lazy(
 
 const TimeToGoal = lazy(() => import("./components/TimeToGoal"));
 
+const LiveOffIncomePage = lazy(() => import("./pages/LiveOffIncomePage"));
+
 export type Page =
   | "home"
   | "compareIncomes"
   | "compareIncomesTaxes"
   | "compareFinancings"
   | "compareCompoundInterest"
-  | "timeToGoal";
+  | "timeToGoal"
+  | "liveOffIncome";
 
 type IconComponent = ComponentType<{
   width?: number | string;
@@ -48,7 +51,7 @@ type PageDefinition = {
   icon: IconComponent;
   component: ComponentType<any>;
   componentProps?: Record<string, unknown>;
-  group: "rendas" | "financiamentos" | "viver-de-renda";
+  group: "rendas" | "financiamentos" | "juros-compostos";
 };
 
 export const PAGE_DEFINITIONS: Record<Page, PageDefinition> = {
@@ -86,13 +89,13 @@ export const PAGE_DEFINITIONS: Record<Page, PageDefinition> = {
     group: "financiamentos"
   },
   compareCompoundInterest: {
-    label: "Viver de Renda",
+    label: "Calcular Juros Compostos",
     path: "/compare-compound-interest",
     description:
       "Simule crescimento com juros compostos para projeções de renda.",
     icon: ArrowUpIcon,
     component: CompareCompoundInterest,
-    group: "viver-de-renda"
+    group: "juros-compostos"
   },
   timeToGoal: {
     label: "Meta",
@@ -101,7 +104,15 @@ export const PAGE_DEFINITIONS: Record<Page, PageDefinition> = {
       "Acompanhe quanto tempo leva para alcançar uma meta financeira.",
     icon: DrawingPinIcon,
     component: TimeToGoal,
-    group: "viver-de-renda"
+    group: "juros-compostos"
+  },
+  liveOffIncome: {
+    label: "Viver de Renda",
+    path: "/live-off-income",
+    description: "Calcule quando sua renda passiva pode alcançar sua meta.",
+    icon: DrawingPinIcon,
+    component: LiveOffIncomePage,
+    group: "juros-compostos"
   }
 } satisfies Record<Page, PageDefinition>;
 
@@ -119,8 +130,8 @@ export const HOME_PAGE_GROUPS = [
     pages: ["compareFinancings"] as const
   },
   {
-    title: "Viver de Renda",
-    pages: ["compareCompoundInterest", "timeToGoal"] as const
+    title: "Calcular Juros Compostos",
+    pages: ["liveOffIncome", "compareCompoundInterest", "timeToGoal"] as const
   }
 ];
 

@@ -3,6 +3,7 @@ import {
   calculateCompoundInterest,
   calculateTimeToGoal,
   calculateTimeToYield,
+  calculateTimeToPassiveIncome,
   calculateInflationAdjustedResult
 } from "./compoundInterestCalculations";
 
@@ -273,6 +274,44 @@ describe("calculateTimeToYield", () => {
         periodType: "years"
       })
     ).toThrow("Target amount unreachable");
+  });
+});
+
+describe("calculateTimeToPassiveIncome", () => {
+  it("reaches the real monthly income target after accounting for inflation", () => {
+    const result = calculateTimeToPassiveIncome({
+      monthlyContribution: 1000,
+      targetMonthlyIncome: 100,
+      interestRate: 12,
+      interestRateType: "annual",
+      inflationRate: 6,
+      inflationRateType: "annual",
+      periodType: "years"
+    });
+
+    const monthlyRate = Math.pow(1.12, 1 / 12) - 1;
+    const inflationRate = Math.pow(1.06, 1 / 12) - 1;
+    const monthlyInterest = result.totalFinal * monthlyRate;
+    const targetAtMonth = 100 * Math.pow(1 + inflationRate, result.totalMonths);
+
+    expect(result.totalMonths).toBeGreaterThan(0);
+    expect(monthlyInterest).toBeGreaterThanOrEqual(targetAtMonth);
+  });
+
+  it("matches the reported net-income contribution scenario", () => {
+    const result = calculateTimeToPassiveIncome({
+      monthlyContribution: 1000.02,
+      targetMonthlyIncome: 1000.02,
+      interestRate: 12,
+      interestRateType: "annual",
+      inflationRate: 0,
+      inflationRateType: "annual",
+      periodType: "years"
+    });
+
+    expect(result.totalYears).toBe(6);
+    expect(result.totalMonthsAfterYears).toBe(2);
+    expect(result.totalMonths).toBe(74);
   });
 });
 
